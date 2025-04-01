@@ -1,0 +1,64 @@
+import { useQuery } from "@tanstack/react-query";
+import { LatLngExpression } from "leaflet";
+import axios from 'axios';
+
+export type BusRoute = Array<LatLngExpression>;
+
+// export const useRoutes = (cityName: String, startLocation: LatLngExpression, endLocation: LatLngExpression) => {
+//   const response = useQuery<BusRoute>({
+//     queryKey: [cityName, [startLocation, endLocation]],
+//     queryFn: () => axios.post(
+//       'http://localhost:8000/predict_route', 
+//       JSON.stringify({ city_name: cityName, start_location: 'startLocation', end_location: 'endLocation' }),
+//       {
+//         headers:
+//           {'Content-Type': 'application/json',}
+//       }
+//     )
+//     .then(x => x.data.route)
+//     .then((x: Array<{lat: number, lng: number}>) => x.map(point => [point.lat, point.lng] as LatLngExpression)),
+//   });
+
+//   return response;
+// };
+type ApiResponse = { city: {lat: number, lng: number} } & Record<string, {
+  stops: Array<{lat: number, lng: number}>;
+  route: Array<{lat: number, lng: number}>
+}>;
+
+type ReturnValue = { city: LatLngExpression } & Record<string, {
+  stops: Array<LatLngExpression>;
+  route: Array<LatLngExpression>;
+}>;
+
+export const useRoutes = (cityName: String, startLocation: LatLngExpression, endLocation: LatLngExpression) => {
+  const response = useQuery<ReturnValue>({
+    queryKey: [cityName, [startLocation, endLocation]],
+    queryFn: () => axios.post(
+      'http://localhost:8000/mock/predict_route', 
+      JSON.stringify({ city_name: cityName, start_location: 'startLocation', end_location: 'endLocation' }),
+      {
+        headers:
+          {'Content-Type': 'application/json',}
+      }
+    )
+    .then(x => x.data.data as ApiResponse)
+    .then(data => {
+      const returnData = {} as ReturnValue;
+      returnData.city = [data.city.lat, data.city.lng] as LatLngExpression
+
+      Object.keys(data).forEach(key => {
+        if (key === 'city') return;
+        
+
+        returnData[key] = { route: [], stops: [] };
+        returnData[key].route = data[key].route.map(point => [point.lat, point.lng] as LatLngExpression)
+        returnData[key].stops = data[key].stops.map(point => [point.lat, point.lng] as LatLngExpression)
+      })
+
+      return returnData;
+    }),
+  });
+
+  return response;
+};

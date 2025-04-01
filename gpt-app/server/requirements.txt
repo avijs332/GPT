@@ -1,0 +1,6 @@
+tensorflow
+osmnx
+matplotlib
+pettingzoo
+keras
+numpy
