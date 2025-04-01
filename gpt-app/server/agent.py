@@ -1,9 +1,9 @@
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam # type: ignore
 from collections import deque
 import tensorflow as tf
-from tensorflow.keras.optimizers.schedules import ExponentialDecay
-from tensorflow.keras.layers import Input, Dense, Softmax, Lambda
-from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers.schedules import ExponentialDecay # type: ignore
+from tensorflow.keras.layers import Input, Dense, Softmax, Lambda # type: ignore
+from tensorflow.keras.models import Model # type: ignore
 import numpy as np
 
 lr_schedule = ExponentialDecay(
