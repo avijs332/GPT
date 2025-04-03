@@ -1,4 +1,4 @@
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, FormLabel, Stack, Box, Typography } from "@mui/material";
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router";
 
@@ -9,12 +9,23 @@ export const PlanningPage = () => {
   const handleSubmit = () => { console.log('nav'); navigate('/map') };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <TextField name='cityName'>
-      </TextField>      
-      <TextField name='busCount'>
-      </TextField>
-      <Button type="submit">Submit</Button>
-    </form>
+    <Box width='50%' justifySelf='center' bgcolor='rgb(70, 75, 178)' padding='20px' borderRadius='10px'>
+      <form onSubmit={handleSubmit}>
+        <Stack spacing={2}>
+        <Typography alignSelf='center' fontSize='30px'>GPT - Generative Public Transport</Typography>
+          <Stack spacing={0.5}>
+            <FormLabel>City Name</FormLabel>
+            <TextField name='cityName'>
+            </TextField>
+          </Stack>
+          <Stack spacing={0.5}>
+            <FormLabel>Number of Bus Lanes</FormLabel>
+            <TextField name='busCount'>
+            </TextField>
+          </Stack>
+          <Button type="submit">Submit</Button>
+        </Stack>
+      </form>
+    </Box>
   );
 };
