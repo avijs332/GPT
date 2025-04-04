@@ -41,14 +41,24 @@ const createSvgIcon = (color: string) => {
 
 const createBusStopIcon = (color: string) => {
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" viewBox="0 0 40 50">
-      <rect x="5" y="5" width="30" height="35" rx="5" ry="5" fill="${color}" stroke="white" stroke-width="3"/>
-      <circle cx="20" cy="40" r="3" fill="black"/>
-      <circle cx="30" cy="40" r="3" fill="black"/>
-      <path d="M12,25 L28,25 M12,20 L28,20 M12,15 L28,15 M15,10 L25,10" stroke="white" stroke-width="2"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="50" height="60" viewBox="0 0 50 60">
+      <!-- Marker Shape -->
+      <path d="M10 8 Q25 -5 40 8 V35 Q40 42 25 55 Q10 42 10 35 Z" fill="${color}" stroke="white" stroke-width="3"/>
+    
+      <!-- Windows -->
+      <rect x="15" y="12" width="20" height="10" rx="3" ry="3" fill="white"/>
+      <line x1="25" y1="12" x2="25" y2="22" stroke="${color}" stroke-width="2"/>
+    
+      <!-- Headlights -->
+      <circle cx="15" cy="34" r="3" fill="yellow"/>
+      <circle cx="35" cy="34" r="3" fill="yellow"/>
+    
+      <!-- Wheels -->
+      <circle cx="18" cy="42" r="4" fill="black" stroke="white" stroke-width="2"/>
+      <circle cx="32" cy="42" r="4" fill="black" stroke="white" stroke-width="2"/>
     </svg>
   `;
-
+  
   return new L.Icon({
     iconUrl: `data:image/svg+xml;base64,${btoa(svg)}`,
     iconSize: [40, 50],
@@ -82,13 +92,13 @@ export const Route: FC<{route: BusRoute, stops: BusRoute}> = ({ route, stops }) 
         </>
       )}
 
-      { 
+      {/* { 
         stops.map(stop => (
-          <Marker position={stop} icon={createBusStopIcon(color)}>
+          <Marker key={stop.toString()} position={stop} icon={createBusStopIcon(color)}>
             <Popup>Stop</Popup>
           </Marker>
         ))
-      }
+      } */}
     </>
   );
 };

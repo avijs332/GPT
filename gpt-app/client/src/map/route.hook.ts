@@ -26,16 +26,16 @@ type ApiResponse = { city: {lat: number, lng: number} } & Record<string, {
   route: Array<{lat: number, lng: number}>
 }>;
 
-type ReturnValue = { city: LatLngExpression } & Record<string, {
+export type RouteHookReturnType = { city: LatLngExpression } & Record<string, {
   stops: Array<LatLngExpression>;
   route: Array<LatLngExpression>;
 }>;
 
 export const useRoutes = (cityName: String, startLocation: LatLngExpression, endLocation: LatLngExpression) => {
-  const response = useQuery<ReturnValue>({
+  const response = useQuery<RouteHookReturnType>({
     queryKey: [cityName, [startLocation, endLocation]],
     queryFn: () => axios.post(
-      'http://localhost:8000/mock/predict_route', 
+      'http://localhost:8000/predict', 
       JSON.stringify({ city_name: cityName, start_location: 'startLocation', end_location: 'endLocation' }),
       {
         headers:
@@ -44,7 +44,7 @@ export const useRoutes = (cityName: String, startLocation: LatLngExpression, end
     )
     .then(x => x.data.data as ApiResponse)
     .then(data => {
-      const returnData = {} as ReturnValue;
+      const returnData = {} as RouteHookReturnType;
       returnData.city = [data.city.lat, data.city.lng] as LatLngExpression
 
       Object.keys(data).forEach(key => {

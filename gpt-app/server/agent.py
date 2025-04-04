@@ -56,21 +56,42 @@ class MAPPOAgent:
         model.compile(optimizer=Adam(learning_rate=lr_schedule), loss='mse')
         return model
 
-    def get_action(self, state, agent_idx, valid_actions, epsilon=0.1):
-      mask = np.zeros(self.max_action_size)
+    def get_action(self, state, agent_idx, valid_actions):
+      """
+      Returns the index into valid_actions list.
+      So if valid_actions = [1234, 5678, 9012], and action=1, that means 5678.
+      The environment will handle that mapping.
+      """
       num_valid_actions = min(len(valid_actions), self.max_action_size)
 
+      # Create mask (1 for valid, 0 for invalid)
+      mask = np.zeros(self.max_action_size)
       mask[:num_valid_actions] = 1
+
+      # Expand dims for model input
       state = np.expand_dims(state, axis=0)
       mask = np.expand_dims(mask, axis=0)
 
-      # Epsilon-greedy exploration
-      if np.random.rand() < epsilon:
-          action = np.random.choice(len(valid_actions))  # Explore
+      # Epsilon-greedy
+      if np.random.rand() < self.epsilon:
+          action = np.random.choice(num_valid_actions)  # Random among valid
       else:
           probs = self.actor[agent_idx].predict([state, mask], verbose=0)[0]
-          action = np.random.choice(len(probs), p=probs)  # Exploit
-      return action
+
+          # Slice to valid part only
+          valid_probs = probs[:num_valid_actions]
+
+          # Normalize again just to be safe
+          valid_probs /= np.sum(valid_probs)
+
+          action = np.random.choice(num_valid_actions, p=valid_probs)
+
+      # Decay epsilon
+      self.epsilon = max(0.01, self.epsilon * 0.995)
+
+
+      return action  # index into valid_actions
+
 
     def store(self, state, actions, rewards, next_state, dones):
         # print(state)
@@ -80,8 +101,6 @@ class MAPPOAgent:
     def train(self, get_valid_actions):
         if len(self.memory) < 64:
             return
-        # batch = np.random.choice(len(self.memory), 64, replace=False)
-        # states, actions, rewards, next_states, dones = zip(*[self.memory[i] for i in batch])
         batch = list(self.memory)#[-64:]  # Take the last 64 entries in order
         states, actions, rewards, next_states, dones = zip(*batch)
         states = np.vstack([np.concatenate(list(s.values())) for s in states])

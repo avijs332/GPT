@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router";
 
 export const PlanningPage = () => {
-  const {  } = useForm();
+  const { register } = useForm();
   const navigate = useNavigate();
 
   const handleSubmit = () => { console.log('nav'); navigate('/map') };
@@ -15,13 +15,11 @@ export const PlanningPage = () => {
         <Typography alignSelf='center' fontSize='30px'>GPT - Generative Public Transport</Typography>
           <Stack spacing={0.5}>
             <FormLabel>City Name</FormLabel>
-            <TextField name='cityName'>
-            </TextField>
+            <TextField {...register('cityName')} />
           </Stack>
           <Stack spacing={0.5}>
             <FormLabel>Number of Bus Lanes</FormLabel>
-            <TextField name='busCount'>
-            </TextField>
+            <TextField {...register('busCount')} type="number" />            
           </Stack>
           <Button type="submit">Submit</Button>
         </Stack>

@@ -1,18 +1,15 @@
-import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { LatLngExpression } from 'leaflet';
 
 import { useRoutes } from './route.hook';
-import { Route } from './Route';
+import { MapContainer } from './MapContainer';
+import { Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const BusRouteMap = () => {  
-  // Default center coordinates (will adjust when route is loaded)
-  const defaultCenter: LatLngExpression = [37.7749, -122.4194]; // San Francisco
-
   const { data, isLoading, error } = useRoutes('Neve Tzedek, Tel Aviv, Israel', [1, 1], [-1, -1]);
+  const navigate = useNavigate();
 
-  // Calculated center based on route or default
-  const center: LatLngExpression = data ? data.city : defaultCenter;
+  const onClick = () => { navigate('/') };
   
   if (error) {
     console.error(error)
@@ -25,24 +22,20 @@ const BusRouteMap = () => {
       {isLoading && <p>Loading route data...</p>}
       {error && <p className="error">Error: {error.message}</p>}
       
-      {(!isLoading && !error && data) && (
-        <div style={{ height: '500px', width: '100%' }}>
-          <MapContainer 
-            center={center} 
-            zoom={15} 
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            {
-              Object.keys(data).map(x => x !== 'city' ? <Route route={data[x].route} stops={data[x].stops} /> : '')
-            }
-          </MapContainer>
-        </div>
-      )}
+      {
+        isLoading ?
+          <CircularProgress /> :
+          (!error && data) && (
+            <MapContainer data={data} />
+          )
+      }
+      <Stack alignItems='center' bgcolor='rgb(70, 75, 178)' padding='20px'>
+        <Button onClick={onClick}>
+          <Typography>
+            Go Back
+          </Typography>
+        </Button>
+      </Stack>
     </div>
   );
 };
