@@ -1,15 +1,17 @@
 import 'leaflet/dist/leaflet.css';
+import { CircularProgress } from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
 
 import { useRoutes } from './route.hook';
 import { MapContainer } from './MapContainer';
-import { Button, CircularProgress, Stack, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { BackButton } from '../common/BackButton';
 
 const BusRouteMap = () => {  
-  const { data, isLoading, error } = useRoutes('Neve Tzedek, Tel Aviv, Israel', [1, 1], [-1, -1]);
-  const navigate = useNavigate();
-
-  const onClick = () => { navigate('/') };
+  const [searchParams] = useSearchParams() 
+  const { data, isLoading, error } = useRoutes(
+    searchParams.get('cityName') as string, 
+    Number(searchParams.get('busCount'))
+  );
   
   if (error) {
     console.error(error)
@@ -29,13 +31,7 @@ const BusRouteMap = () => {
             <MapContainer data={data} />
           )
       }
-      <Stack alignItems='center' bgcolor='rgb(70, 75, 178)' padding='20px'>
-        <Button onClick={onClick}>
-          <Typography>
-            Go Back
-          </Typography>
-        </Button>
-      </Stack>
+      <BackButton route='/' />
     </div>
   );
 };

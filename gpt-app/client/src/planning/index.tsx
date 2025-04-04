@@ -6,7 +6,7 @@ export const PlanningPage = () => {
   const { register } = useForm();
   const navigate = useNavigate();
 
-  const handleSubmit = () => { console.log('nav'); navigate('/map') };
+  const handleSubmit = () => { navigate('/prepare') };
 
   return (
     <Box width='50%' justifySelf='center' bgcolor='rgb(70, 75, 178)' padding='20px' borderRadius='10px'>

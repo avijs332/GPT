@@ -3,20 +3,25 @@ import random
 from osm_env import OSMEnv
 from agent import MAPPOAgent
 
-def get_routes():
+def get_routes(city_name, bus_count):
     model_paths = [f"./models/actor_{i}.h5" for i in range(3)]
 
     final_trail = predict(
         agent_class=MAPPOAgent,
         env_class=OSMEnv,
-        num_agents=3,
+        num_agents=bus_count,
         state_size=2,
         max_action_size=8,
         model_paths=model_paths,
-        episodes=1,
-        show_plot=True,
-        save_path="test_route"  # will save as test_route_ep1.png
+        episodes=1
     )
+
+    final_lanes = transform_trails_to_lanes(final_trail)
+    final_lanes['city'] = final_lanes['lanes']['lane_1']['route'][0]
+
+    return final_lanes
+
+
 
 def predict(agent_class, env_class, num_agents, state_size, max_action_size, model_paths, episodes=1):
     env = env_class()
@@ -76,7 +81,7 @@ def transform_trails_to_lanes(final_trail):
         stops = random.sample(formatted_route, num_stops)
 
         # Construct the final structure
-        final_lanes[f"lane_{i}"] = {
+        final_lanes['lanes'][f"lane_{i}"] = {
             "stops": stops,
             "route": formatted_route
         }
