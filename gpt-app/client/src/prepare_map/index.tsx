@@ -1,56 +1,68 @@
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
 import { useSearchParams } from "react-router-dom";
-import { CircularProgress } from '@mui/material';
-import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet';
-import { LatLngExpression } from 'leaflet';
+import { Box, Checkbox, CircularProgress, Grid, Stack, TextField, Typography } from '@mui/material';
+import { useForm } from 'react-hook-form';
 
-import { useOsmCity } from "./osm.hook";
 import { BackButton } from '../common/BackButton';
+import { PrepareMap } from './PrepareMap';
+import { OsmLocation, useOsmSearch } from '../hooks';
 
 export const PreparePage = () => {
   const [searchParams] = useSearchParams() 
-  const { data, isLoading } = useOsmCity(searchParams.get('cityName') as string)
-  const [markers, setMarkers] = useState<Array<LatLngExpression>>([]);
+  const { data: city, isLoading: isLoadingCity } = useOsmSearch(searchParams.get('cityName') as string)
+  const [chosenLocation, setChosenLocations] = useState<Array<OsmLocation>>([]);
 
-  function AddMarkerOnClick() {
-      useMapEvents({
-          click(e) {
-              setMarkers([...markers, e.latlng]);
-          },
-      });
-      return null;
-  }
+  const { register, watch } = useForm();
 
-  const center = (!isLoading ? [data.lat, data.lon] : [-1, 1]) as LatLngExpression;
+  const search = watch('locationSearch') as string;
+
+  const { data: locations, isLoading: isLoadingLocations } = useOsmSearch(search);
+
+  const markLocationOnChange = (event: React.ChangeEvent<HTMLInputElement>, location: OsmLocation) => {
+    const isChecked = event.target.checked;
+
+    if (isChecked) {
+      setChosenLocations(prev => [...prev, location])
+    } else {
+      setChosenLocations(prev => prev.filter(x => x.osm_id !== location.osm_id))
+    }
+  };
 
   return (
-    <div className="bus-route-container">
+    <Stack>
+      <TextField {...register('locationSearch')} />
       {
-        isLoading ? 
+        isLoadingLocations ?
           <CircularProgress /> :
-          <div style={{ height: '500px', width: '100%' }}>
-            <MapContainer
-              center={center} 
-              zoom={15} 
-              style={{ height: '100%', width: '100%' }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <AddMarkerOnClick />
-              {markers.map((position, index) => (
-                  <Marker key={index} position={position}>
-                      <Popup>Marker at {position[0]}, {position[1]}</Popup>
-                  </Marker>
-              ))}
-
-            </MapContainer>
-          </div>
+            search &&
+            (
+              (locations && locations.length) ?
+                locations.map(x => 
+                  <Box display='flex'>
+                    <Checkbox onChange={(event) => markLocationOnChange(event, x) } />
+                    <Typography>{ x.display_name }</Typography>
+                  </Box>
+                ) :
+                  <Typography>Seems like nothing like this exist</Typography>
+            )
+            
       }
-      <BackButton route='/map' />
-      <BackButton />
-    </div>
+      {
+        isLoadingCity ? 
+          <CircularProgress /> :
+          city && city.length ?
+            <PrepareMap city={city[0]} markers={chosenLocation.map(x => [x.lat, x.lon])} /> :
+            <Typography>Something went wrong</Typography>
+      }
+      <Grid container flex={1}>
+        <Box flex={1} height='100%'>
+          <BackButton route='/' fullWidth />
+        </Box>
+        <Box flex={1} height='100%'>
+          <BackButton fullWidth label='Submit' route={`/map?cityName=${'a'}&busCount=${1}`} />
+        </Box>
+      </Grid>
+    </Stack>
   );
 };
