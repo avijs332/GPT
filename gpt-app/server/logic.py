@@ -3,30 +3,32 @@ import random
 from osm_env import OSMEnv
 from agent import MAPPOAgent
 
-def get_routes(city_name, bus_count):
+state_size = 2
+max_action_size = 8
+
+def get_routes(city_name, bus_count, interest_points, start_locations):
     model_paths = [f"./models/actor_{i}.h5" for i in range(3)]
+    env = OSMEnv(location=city_name, central_stations=start_locations, interest_points=interest_points, num_agents=bus_count, run_type='test')
+    agent = MAPPOAgent(state_size, max_action_size, bus_count, env.node_to_index)
 
     final_trail = predict(
-        agent_class=MAPPOAgent,
-        env_class=OSMEnv,
+        agent=agent,
+        env=env,
         num_agents=bus_count,
-        state_size=2,
-        max_action_size=8,
         model_paths=model_paths,
         episodes=1
     )
 
     final_lanes = transform_trails_to_lanes(final_trail)
+    print('=========')
+    print(final_lanes)
+    print('=========')
     final_lanes['city'] = final_lanes['lanes']['lane_1']['route'][0]
 
     return final_lanes
 
 
-
-def predict(agent_class, env_class, num_agents, state_size, max_action_size, model_paths, episodes=1):
-    env = env_class()
-    agent = agent_class(state_size, max_action_size, num_agents, env.node_to_index)
-
+def predict(agent, env, num_agents, model_paths, episodes=1):
     # Load trained models
     for i in range(num_agents):
         agent.actor[i].load_weights(model_paths[i])
@@ -71,6 +73,7 @@ def predict(agent_class, env_class, num_agents, state_size, max_action_size, mod
 
 def transform_trails_to_lanes(final_trail):
     final_lanes = {}
+    final_lanes['lanes'] = {}
 
     for i, (agent_name, route) in enumerate(final_trail.items(), start=1):
         # Convert route points to the required format
@@ -79,7 +82,6 @@ def transform_trails_to_lanes(final_trail):
         # Randomly select a few stops from the route
         num_stops = min(3, len(formatted_route))  # Choose up to 3 stops or less if the route is small
         stops = random.sample(formatted_route, num_stops)
-
         # Construct the final structure
         final_lanes['lanes'][f"lane_{i}"] = {
             "stops": stops,

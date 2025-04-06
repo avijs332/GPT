@@ -1,16 +1,16 @@
 import 'leaflet/dist/leaflet.css';
 import { CircularProgress } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
 
 import { useRoutes } from './route.hook';
 import { MapContainer } from './MapContainer';
 import { BackButton } from '../common/BackButton';
+import { useCity } from '../providers/city-provider';
 
 const BusRouteMap = () => {  
-  const [searchParams] = useSearchParams() 
+  const { city, busCount, interestPoints, startPoints } = useCity();
+
   const { data, isLoading, error } = useRoutes(
-    searchParams.get('cityName') as string, 
-    Number(searchParams.get('busCount'))
+    city.name, busCount, interestPoints, startPoints
   );
   
   if (error) {

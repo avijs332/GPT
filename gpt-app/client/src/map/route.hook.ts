@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { LatLngExpression } from "leaflet";
 import axios from 'axios';
+import { OsmLocation } from "../hooks";
 
 export type BusRoute = Array<LatLngExpression>;
 
@@ -34,14 +35,14 @@ export type RouteHookReturnType = { city: LatLngExpression } & Record<string, {
   route: Array<LatLngExpression>;
 }>;
 
-export const useRoutes = (cityName: string, busCount: number) => {
+export const useRoutes = (cityName: string, busCount: number, interestPoints: Array<OsmLocation>, startPoints: Array<OsmLocation>) => {
   const response = useQuery<RouteHookReturnType>({
     queryKey: [cityName, busCount],
     refetchInterval: Infinity,
     queryFn: () => axios.post(
-      // 'http://localhost:8000/predict', 
-      'http://localhost:8000/mock/predict_route', 
-      JSON.stringify({ city_name: cityName, bus_count: busCount }),
+      'http://localhost:8000/predict', 
+      // 'http://localhost:8000/mock/predict_route', 
+      JSON.stringify({ city_name: cityName, bus_count: busCount, interest_points: interestPoints, start_points: startPoints }),
       {
         headers:
           {'Content-Type': 'application/json',}

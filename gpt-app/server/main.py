@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import osmnx as ox
 from logic import get_routes
 
@@ -16,10 +16,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class OsmLocation(BaseModel):
+    place_id: int
+    licence: str
+    osm_type: str
+    osm_id: int
+    lat: float
+    lon: float
+    # class_: str  # 'class' is a reserved keyword in Python
+    # type: str
+    place_rank: int
+    importance: float
+    addresstype: str
+    name: str
+    display_name: str
+    boundingbox: Tuple[float, float, float, float]
+
+    class Config:
+        frozen = True  # Makes it hashable
+    #     fields = {'class_': 'class'}
 
 class RouteRequest(BaseModel):
     city_name: Optional[str] = None
     bus_count: Optional[int] = None
+    interest_points: Optional[List[OsmLocation]] = None
+    start_points: Optional[List[OsmLocation]] = None
 
 
 class Coordinate(BaseModel):
@@ -52,7 +73,7 @@ class Response(BaseModel):
 
 @app.post("/predict", response_model=Response)
 async def get_city_coordinates(request: RouteRequest):
-    routes = get_routes(request.city_name, request.bus_count)
+    routes = get_routes(request.city_name, request.bus_count, request.interest_points, request.start_points)
  
     return {"success": True, "data": routes}
 

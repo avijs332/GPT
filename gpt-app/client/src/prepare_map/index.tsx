@@ -1,31 +1,29 @@
 import 'leaflet/dist/leaflet.css';
-import { useState } from 'react';
-import { useSearchParams } from "react-router-dom";
 import { Box, Checkbox, CircularProgress, Grid, Stack, TextField, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 
 import { BackButton } from '../common/BackButton';
 import { PrepareMap } from './PrepareMap';
 import { OsmLocation, useOsmSearch } from '../hooks';
+import { useCity } from '../providers/city-provider';
+import { LatLngTuple } from 'leaflet';
 
 export const PreparePage = () => {
-  const [searchParams] = useSearchParams() 
-  const { data: city, isLoading: isLoadingCity } = useOsmSearch(searchParams.get('cityName') as string)
-  const [chosenLocation, setChosenLocations] = useState<Array<OsmLocation>>([]);
+  const { city, interestPoints, setInterestPoints, startPoints, setStartPoints } = useCity();
 
   const { register, watch } = useForm();
 
   const search = watch('locationSearch') as string;
 
-  const { data: locations, isLoading: isLoadingLocations } = useOsmSearch(search);
+  const { data: locations, isLoading: isLoadingLocations } = useOsmSearch(search, { viewBox: city.boundingbox });
 
-  const markLocationOnChange = (event: React.ChangeEvent<HTMLInputElement>, location: OsmLocation) => {
+  const markLocationOnChange = (event: React.ChangeEvent<HTMLInputElement>, location: OsmLocation, setMethod: React.Dispatch<React.SetStateAction<OsmLocation[]>>) => {
     const isChecked = event.target.checked;
 
     if (isChecked) {
-      setChosenLocations(prev => [...prev, location])
+      setMethod(prev => [...prev, location])
     } else {
-      setChosenLocations(prev => prev.filter(x => x.osm_id !== location.osm_id))
+      setMethod(prev => prev.filter(x => x.osm_id !== location.osm_id))
     }
   };
 
@@ -39,22 +37,17 @@ export const PreparePage = () => {
             (
               (locations && locations.length) ?
                 locations.map(x => 
-                  <Box display='flex'>
-                    <Checkbox onChange={(event) => markLocationOnChange(event, x) } />
+                  <Box display='flex' key={x.osm_id}>
+                    <Checkbox onChange={(event) => markLocationOnChange(event, x, setInterestPoints) } />
+                    <Checkbox onChange={(event) => markLocationOnChange(event, x, setStartPoints) } />
                     <Typography>{ x.display_name }</Typography>
                   </Box>
                 ) :
                   <Typography>Seems like nothing like this exist</Typography>
             )
             
-      }
-      {
-        isLoadingCity ? 
-          <CircularProgress /> :
-          city && city.length ?
-            <PrepareMap city={city[0]} markers={chosenLocation.map(x => [x.lat, x.lon])} /> :
-            <Typography>Something went wrong</Typography>
-      }
+      }         
+      <PrepareMap city={city} markers={interestPoints.map(x => [x.lat, x.lon] as LatLngTuple).concat(startPoints.map(x => [x.lat, x.lon]))} />
       <Grid container flex={1}>
         <Box flex={1} height='100%'>
           <BackButton route='/' fullWidth />

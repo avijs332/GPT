@@ -5,26 +5,44 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+
 # Parameters
-location = "Neve Tzedek, Tel Aviv, Israel"
-num_agents = 3
+# location = "Neve Tzedek, Tel Aviv, Israel"
+# num_agents = 3
+# max_steps_per_episode = 100
+# num_episodes = 50
+# video_filename = "osm_env_training.mp4"
+
+# central_stations= [33617427]#, 412530001, 6427502028, 3985298559, 6154187420]
+# interest_points = {
+#             357491441: {'type': 'mall', 'grade': 10},
+#             1628415520: {'type': 'school', 'grade': 6},
+#             2268450648: {'type': 'park', 'grade': 8},
+#             4833025980: {'type': 'restaurant', 'grade': 7},
+#             7968522921: {'type': 'hospital', 'grade': 9},
+#             57046703: {'type': 'cafe', 'grade': 5}
+#           }
+
 max_steps_per_episode = 100
 num_episodes = 50
 video_filename = "osm_env_training.mp4"
 
-central_stations= [33617427]#, 412530001, 6427502028, 3985298559, 6154187420]
-interest_points = {
-            357491441: {'type': 'mall', 'grade': 10},
-            1628415520: {'type': 'school', 'grade': 6},
-            2268450648: {'type': 'park', 'grade': 8},
-            4833025980: {'type': 'restaurant', 'grade': 7},
-            7968522921: {'type': 'hospital', 'grade': 9},
-            57046703: {'type': 'cafe', 'grade': 5}
-          }
+def get_closest_node(G, points):
+    result = {}
 
+    for point in points:
+        if point.osm_id in G.nodes:
+            # Node exists, keep it
+            result[point.osm_id] = { 'type': 'shit', 'grade': 10 }
+        else:
+            # Node not in graph, but we have coordinates
+            nearest = ox.distance.nearest_nodes(G, X=point.lon, Y=point.lat)
+            result[nearest] = { 'type': 'shit', 'grade': 10 }  # replace with nearest
+    
+    return result
 class OSMEnv(ParallelEnv):
 
-    def __init__(self):
+    def __init__(self, location, central_stations, interest_points, num_agents, run_type, initial_central_station=None):
         self.G = ox.graph_from_place(location, network_type="drive")
         self.nodes = list(self.G.nodes)
         self.node_to_index = {node: idx for idx, node in enumerate(self.nodes)}
@@ -38,7 +56,11 @@ class OSMEnv(ParallelEnv):
         self.frames = []  # Store frames for video
         self.edge_times = {}
         self.total_edge_length = sum(self.edge_lengths.values())
-        self.central_stations=central_stations
+        self.central_stations=keys = list(get_closest_node(self.G, central_stations).keys())
+        if run_type == "train":
+            self.initial_central_station=initial_central_station
+        else:
+          self.initial_central_station=[random.choice(self.central_stations)]
         if self.central_stations is None:
             self.central_stations = random.sample(self.nodes, 4)  # Select 4 random nodes
         self.central_stations_set = set(self.central_stations)
@@ -49,11 +71,11 @@ class OSMEnv(ParallelEnv):
             if isinstance(speed, str): # if the speed is a string, then split the string and take the first number.
                 speed = int(speed.split(' ')[0])
             self.edge_times[tuple(sorted([u, v]))] = length / (speed / 3.6) # calculate the time in seconds.
-        self.interest_points = interest_points
+        self.interest_points = get_closest_node(self.G, interest_points)
         self.visited_interest_points = {agent: set() for agent in self.agents}  # Track visited interest points
-
+        
     def reset(self, seed=None, options=None):
-      self.pos = {agent: random.choice(self.central_stations) for agent in self.agents} # start at a central point.
+      self.pos = {agent: random.choice(self.initial_central_station) for agent in self.agents} # start at a central point.
       self.trails = {agent: [self.pos[agent]] for agent in self.agents}
       self.visited_edges = {agent: set() for agent in self.agents}
       self.visited_stations = {agent: set() for agent in self.agents}
@@ -80,71 +102,74 @@ class OSMEnv(ParallelEnv):
 
         edge_length = self.edge_lengths.get(edge, 1)
         edge_time = self.edge_times.get(edge, 1)
+        total_edges = len(self.G.edges)
 
-        # Reward for moving towards a new road (scaled)
-        rewards[agent] += min(edge_length, 50)
+        # === Normalize and scale each component ===
 
-        # Smooth penalty for travel time
-        travel_time_penalty = min(20, 0.1 * edge_time)
+        # Edge reward (max 50m)
+        edge_reward = min(edge_length, 50) / 50.0  # Range: 0 to 1
+        rewards[agent] += edge_reward
+
+        # Travel time penalty (max 20s)
+        travel_time_penalty = min(0.1 * edge_time, 20) / 20.0  # Range: 0 to 1
         rewards[agent] -= travel_time_penalty
 
-        # Reward for covering more road distance (longer routes)
-        rewards[agent] += self.get_total_distance_reward(agent)
+        # Distance-based reward
+        total_distance = sum(self.edge_lengths.get(tuple(sorted([self.trails[agent][i], self.trails[agent][i+1]])), 0)
+                            for i in range(len(self.trails[agent]) - 1))
+        max_reasonable_distance = 1000  # meters
+        distance_reward = min(total_distance, max_reasonable_distance) / max_reasonable_distance
+        rewards[agent] += distance_reward
 
-        # Prevent Dead-Ends
-        if self.is_dead_end(next_node):
-            rewards[agent] -= 30  # Discourage dead-ends
-            next_node = self.find_alternate_path(agent, current_node)  # Find escape route
-
-        # Cycle detection (progressive penalty)
+        # Cycle penalty (bounded to -1)
         if self.is_stuck_in_cycle(agent, current_node):
             cycle_penalty = max(-5 * self.count_cycle_repeats(agent), -50)
-            rewards[agent] += cycle_penalty
+            rewards[agent] += cycle_penalty / 50.0  # Normalized to [-1, 0]
 
-        # Reward for covering new roads
-        rewards[agent] += self.get_road_coverage_reward(agent)
+        # Dead-end penalty
+        if self.is_dead_end(next_node):
+            rewards[agent] -= 1.0  # Hard normalized penalty
+            next_node = self.find_alternate_path(agent, current_node)
 
-        # Visiting stations (scaled reward)
+        # Road coverage reward
+        coverage_reward = (len(self.visited_edges[agent]) / total_edges) * 0.5  # not * 1.0
+        rewards[agent] += coverage_reward  # already normalized
+
+        # Central station bonus
         if self.pos[agent] in self.central_stations_set:
             if self.pos[agent] not in self.visited_stations[agent]:
                 self.visited_stations[agent].add(self.pos[agent])
-                rewards[agent] += 20 + 5 * len(self.visited_stations[agent])
+                station_reward = (5 * len(self.visited_stations[agent])) / (5 * len(self.central_stations))
+                rewards[agent] += station_reward
 
-        # Interest Point Reward (Scaled + Diminishing Returns)
-        if self.pos[agent] in self.interest_points:  # Check if the agent is at an interest point
-            interest_point = self.interest_points[self.pos[agent]]
+        # Interest Point Reward (grade 1-10 scaled to 0-1)
+        if self.pos[agent] in self.interest_points:
+          interest_point = self.interest_points[self.pos[agent]]
+          grade = interest_point['grade']
 
-            # If the agent has already visited this interest point, apply diminishing returns
-            if self.pos[agent] not in self.visited_interest_points[agent]:
-                # First time visit: No diminishing return
-                rarity_factor = 1
-                rewards[agent] += (interest_point['grade'] * 5) * rarity_factor / 10  # Max reward
-                self.visited_interest_points[agent].add(self.pos[agent])  # Mark as visited
-            else:
-                # Diminishing returns for subsequent visits
-                # Reward decreases as the agent visits the same point multiple times
-                rarity_factor = max(1, 10 - len(self.visited_interest_points[agent]))  # Reward decreases with each visit
-                rewards[agent] += (interest_point['grade'] * 5) * rarity_factor / 10  # Diminishing reward
+          # Count how many agents have already visited this POI
+          num_agents_visited = sum(
+              1 for a in self.agents
+              if self.pos[agent] in self.visited_interest_points[a]
+          )
 
+          # Scale down reward as more agents visit it
+          base_reward = grade * 5
+          scaled_reward = base_reward / (1 + num_agents_visited)  # e.g. /2 if one other agent already visited
 
-        # Reward clipping
-        rewards[agent] = max(-50, min(50, rewards[agent]))
+          # Apply diminishing returns per agent (optional)
+          if self.pos[agent] not in self.visited_interest_points[agent]:
+              self.visited_interest_points[agent].add(self.pos[agent])
+              rarity_factor = 1.0
+          else:
+              rarity_factor = max(1, 10 - len(self.visited_interest_points[agent]))
 
+          normalized_reward = (scaled_reward * rarity_factor) / 50.0
+          rewards[agent] += normalized_reward
+
+        # === Final reward clip ===
+        rewards[agent] = max(-1.0, min(1.0, rewards[agent]))
         return rewards
-
-    def get_road_coverage_reward(self, agent):
-        covered_edges = len(self.visited_edges[agent])
-        total_edges = len(self.G.edges)
-
-        # More reward for first-time coverage, less for repeated coverage
-        return (covered_edges / total_edges) * 50
-
-    def get_total_distance_reward(self, agent):
-      """Rewards agents for covering longer total distances in kilometers."""
-      total_distance = sum(self.edge_lengths.get(tuple(sorted([self.trails[agent][i], self.trails[agent][i+1]])), 0)
-                          for i in range(len(self.trails[agent]) - 1))
-      return total_distance * 0.1  # Scale the reward to balance other rewards
-
 
     def is_dead_end(self, node):
       """Returns True if the node is a dead-end (only one outgoing edge)."""

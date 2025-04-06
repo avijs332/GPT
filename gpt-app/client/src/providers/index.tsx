@@ -3,13 +3,19 @@ import { BrowserRouter } from 'react-router';
 
 import { QueryProvider } from './query-provider';
 import { ThemeProvider } from './theme-provider';
+import { CityProvider } from './city-provider';
+import { ErrorBoundaryProvider } from './error-boundary';
 
 export const AppProviders = ({ children }: PropsWithChildren) => (
   <BrowserRouter>
-    <ThemeProvider>
-      <QueryProvider>
-        {children}
-      </QueryProvider>
-    </ThemeProvider>
+    <QueryProvider>
+      <CityProvider>
+        <ThemeProvider>
+          <ErrorBoundaryProvider>
+            {children}
+          </ErrorBoundaryProvider>
+        </ThemeProvider>
+      </CityProvider>
+    </QueryProvider>
   </BrowserRouter>
 );
