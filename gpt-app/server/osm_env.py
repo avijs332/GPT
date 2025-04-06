@@ -56,7 +56,7 @@ class OSMEnv(ParallelEnv):
         self.frames = []  # Store frames for video
         self.edge_times = {}
         self.total_edge_length = sum(self.edge_lengths.values())
-        self.central_stations=keys = list(get_closest_node(self.G, central_stations).keys())
+        self.central_stations= list(get_closest_node(self.G, central_stations).keys())
         if run_type == "train":
             self.initial_central_station=initial_central_station
         else:
@@ -73,7 +73,7 @@ class OSMEnv(ParallelEnv):
             self.edge_times[tuple(sorted([u, v]))] = length / (speed / 3.6) # calculate the time in seconds.
         self.interest_points = get_closest_node(self.G, interest_points)
         self.visited_interest_points = {agent: set() for agent in self.agents}  # Track visited interest points
-        
+      
     def reset(self, seed=None, options=None):
       self.pos = {agent: random.choice(self.initial_central_station) for agent in self.agents} # start at a central point.
       self.trails = {agent: [self.pos[agent]] for agent in self.agents}
@@ -94,8 +94,61 @@ class OSMEnv(ParallelEnv):
         return valid_actions
 
     def _get_observations(self):
-          return {agent: np.array([self.node_to_index[self.pos[agent]], len(self.visited_edges[agent])], dtype=np.float32)
-                  for agent in self.agents}
+        observations = {}
+        num_nodes = self.G.number_of_nodes()
+        num_edges = self.G.number_of_edges()
+
+        for agent in self.agents:
+            current_node = self.pos[agent]
+            visited_edges = self.visited_edges[agent]
+
+            # 1. Normalize current node index
+            current_node_feature = self.node_to_index[current_node] / num_nodes
+
+            # 2. Number of visited edges (normalized)
+            visited_edges_feature = len(visited_edges) / num_edges if num_edges > 0 else 0.0
+
+            # 3. Neighbor indices (average of normalized neighbor indices)
+            neighbors = list(self.G.neighbors(current_node))
+            if neighbors:
+                neighbor_features = np.mean([
+                    self.node_to_index[n] / num_nodes for n in neighbors
+                ])
+            else:
+                neighbor_features = 0.0
+
+            # 4. Shortest path distances to central stations (average, normalized)
+            central_dists = []
+            for station in self.central_stations:
+                try:
+                    dist = nx.shortest_path_length(self.G, current_node, station, weight='weight')
+                except nx.NetworkXNoPath:
+                    dist = num_nodes
+                central_dists.append(dist / num_nodes)
+            central_station_feature = np.mean(central_dists) if central_dists else 0.0
+
+            # 5. Shortest path distances to interest points (average, normalized)
+            poi_dists = []
+            for poi in self.interest_points:
+                try:
+                    dist = nx.shortest_path_length(self.G, current_node, poi, weight='weight')
+                except nx.NetworkXNoPath:
+                    dist = num_nodes
+                poi_dists.append(dist / num_nodes)
+            poi_feature = np.mean(poi_dists) if poi_dists else 0.0
+
+            # Final state vector
+            state = np.array([
+                current_node_feature,
+                visited_edges_feature,
+                neighbor_features,
+                central_station_feature,
+                poi_feature
+            ], dtype=np.float32)
+
+            observations[agent] = state
+
+        return observations
 
     def reward_fn(self, current_node, next_node, agent, rewards):
         edge = tuple(sorted([current_node, next_node]))

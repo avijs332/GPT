@@ -12,6 +12,7 @@ lr_schedule = ExponentialDecay(
     decay_rate=0.96,  # Decay factor
     staircase=True  # Decay at discrete steps
 )
+actor_loss_history = {}
 
 class MAPPOAgent:
     def __init__(self, state_size, max_action_size, num_agents, node_to_index):
@@ -158,7 +159,13 @@ class MAPPOAgent:
                   # Final loss (mean)
                   total_loss = tf.reduce_mean(weighted_loss)
 
+                  if i not in actor_loss_history:
+                    actor_loss_history[agent_name] = []
+                  actor_loss_history[agent_name].append(total_loss.numpy())
+
               # Backprop
             grads = tape.gradient(total_loss, self.actor[i].trainable_variables)
             self.actor_optimizers[i].apply_gradients(zip(grads, self.actor[i].trainable_variables))
             self.entropy_weight = max(0.001, self.entropy_weight * 0.995)
+
+        return critic_loss

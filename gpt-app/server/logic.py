@@ -3,11 +3,11 @@ import random
 from osm_env import OSMEnv
 from agent import MAPPOAgent
 
-state_size = 2
+state_size = 5
 max_action_size = 8
 
 def get_routes(city_name, bus_count, interest_points, start_locations):
-    model_paths = [f"./models/actor_{i}.h5" for i in range(3)]
+    model_paths = [f"./models/actor_{i}.h5" for i in range(bus_count)]
     env = OSMEnv(location=city_name, central_stations=start_locations, interest_points=interest_points, num_agents=bus_count, run_type='test')
     agent = MAPPOAgent(state_size, max_action_size, bus_count, env.node_to_index)
 
