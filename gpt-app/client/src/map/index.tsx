@@ -7,10 +7,10 @@ import { BackButton } from '../common/BackButton';
 import { useCity } from '../providers/city-provider';
 
 const BusRouteMap = () => {  
-  const { city, busCount, interestPoints, startPoints } = useCity();
+  const { city, busCount, interestPoints, centralPoints } = useCity();
 
   const { data, isLoading, error } = useRoutes(
-    city.name, busCount, interestPoints, startPoints
+    city.name, busCount, interestPoints, centralPoints
   );
   
   if (error) {

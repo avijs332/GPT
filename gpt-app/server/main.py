@@ -40,7 +40,7 @@ class RouteRequest(BaseModel):
     city_name: Optional[str] = None
     bus_count: Optional[int] = None
     interest_points: Optional[List[OsmLocation]] = None
-    start_points: Optional[List[OsmLocation]] = None
+    central_points: Optional[List[OsmLocation]] = None
 
 
 class Coordinate(BaseModel):
@@ -73,7 +73,7 @@ class Response(BaseModel):
 
 @app.post("/predict", response_model=Response)
 async def get_city_coordinates(request: RouteRequest):
-    routes = get_routes(request.city_name, request.bus_count, request.interest_points, request.start_points)
+    routes = get_routes(request.city_name, request.bus_count, request.interest_points, request.central_points)
  
     return {"success": True, "data": routes}
 

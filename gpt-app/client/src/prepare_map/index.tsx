@@ -9,7 +9,7 @@ import { useCity } from '../providers/city-provider';
 import { LatLngTuple } from 'leaflet';
 
 export const PreparePage = () => {
-  const { city, interestPoints, setInterestPoints, startPoints, setStartPoints } = useCity();
+  const { city, interestPoints, setInterestPoints, centralPoints, setCentralPoints } = useCity();
 
   const { register, watch } = useForm();
 
@@ -39,7 +39,7 @@ export const PreparePage = () => {
                 locations.map(x => 
                   <Box display='flex' key={x.osm_id}>
                     <Checkbox onChange={(event) => markLocationOnChange(event, x, setInterestPoints) } />
-                    <Checkbox onChange={(event) => markLocationOnChange(event, x, setStartPoints) } />
+                    <Checkbox onChange={(event) => markLocationOnChange(event, x, setCentralPoints) } />
                     <Typography>{ x.display_name }</Typography>
                   </Box>
                 ) :
@@ -47,7 +47,7 @@ export const PreparePage = () => {
             )
             
       }         
-      <PrepareMap city={city} markers={interestPoints.map(x => [x.lat, x.lon] as LatLngTuple).concat(startPoints.map(x => [x.lat, x.lon]))} />
+      <PrepareMap city={city} markers={interestPoints.map(x => [x.lat, x.lon] as LatLngTuple).concat(centralPoints.map(x => [x.lat, x.lon]))} />
       <Grid container flex={1}>
         <Box flex={1} height='100%'>
           <BackButton route='/' fullWidth />
