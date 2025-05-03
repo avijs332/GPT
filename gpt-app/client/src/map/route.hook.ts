@@ -37,7 +37,7 @@ export type RouteHookReturnType = { city: LatLngExpression } & Record<string, {
 
 export const useRoutes = (cityName: string, busCount: number, interestPoints: Array<OsmLocation>, centralPoints: Array<OsmLocation>) => {
   const response = useQuery<RouteHookReturnType>({
-    queryKey: [cityName, busCount],
+    queryKey: [cityName, busCount, interestPoints, centralPoints],
     refetchInterval: Infinity,
     queryFn: () => axios.post(
       'http://localhost:8000/predict', 

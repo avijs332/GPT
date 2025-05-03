@@ -1,3 +1,4 @@
+import json
 import random
 
 from osm_env import OSMEnv
@@ -20,10 +21,13 @@ def get_routes(city_name, bus_count, interest_points, central_points):
     )
 
     final_lanes = transform_trails_to_lanes(final_trail)
-    print('=========')
-    print(final_lanes)
-    print('=========')
     final_lanes['city'] = final_lanes['lanes']['lane_1']['route'][0]
+    
+    with open("final_trail.json", "w") as f:
+        json.dump(final_trail, f, indent=4)  # `indent=4` makes it nicely formatted
+        
+    with open("final_lanes.json", "w") as f:
+        json.dump(final_lanes, f, indent=4)  # `indent=4` makes it nicely formatted
 
     return final_lanes
 
@@ -61,6 +65,10 @@ def predict(agent, env, num_agents, model_paths, episodes=1):
                 print("Breaking test loop, agent possibly stuck")
                 break
 
+        with open("env_trails.json", "w") as f:
+            json.dump(env.trails, f, indent=4)
+        print()
+        
         final_trail = {}
         for agent_name in env.agents:
             final_trail[agent_name] = [

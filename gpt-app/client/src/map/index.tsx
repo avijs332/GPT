@@ -14,7 +14,7 @@ const BusRouteMap = () => {
   );
   
   if (error) {
-    console.error(error)
+    console.error(error);
   };
 
   return (
@@ -31,7 +31,7 @@ const BusRouteMap = () => {
             <MapContainer data={data} />
           )
       }
-      <BackButton route='/' />
+      <BackButton />
     </div>
   );
 };

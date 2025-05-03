@@ -34,12 +34,32 @@ class OsmLocation(BaseModel):
 
     class Config:
         frozen = True  # Makes it hashable
+
+class InterestPoint(BaseModel):
+    place_id: int
+    licence: str
+    osm_type: str
+    osm_id: int
+    lat: float
+    lon: float
+    # class_: str  # 'class' is a reserved keyword in Python
+    # type: str
+    place_rank: int
+    importance: float
+    addresstype: str
+    name: str
+    display_name: str
+    boundingbox: Tuple[float, float, float, float]
+    grade: int
+
+    class Config:
+        frozen = True  # Makes it hashable
     #     fields = {'class_': 'class'}
 
 class RouteRequest(BaseModel):
     city_name: Optional[str] = None
     bus_count: Optional[int] = None
-    interest_points: Optional[List[OsmLocation]] = None
+    interest_points: Optional[List[InterestPoint]] = None
     central_points: Optional[List[OsmLocation]] = None
 
 

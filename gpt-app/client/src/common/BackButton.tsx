@@ -1,36 +1,28 @@
 import { FC } from "react"
 import { useNavigate } from "react-router-dom";
-import { Stack, Button, Typography } from "@mui/material";
 
+import { Button, ButtonProps } from "./Button";
 import { useCity } from "../providers/city-provider";
 
-interface BackButtonProps {
+interface BackButtonProps extends Omit<ButtonProps, 'label'> {
   route?: string;
-  label?: string;
-  fullWidth?: boolean;
+  label?: string
 };
 
-export const BackButton: FC<BackButtonProps> = ({ route, label, fullWidth }) => {
+export const BackButton: FC<BackButtonProps> = ({ onClick, route, label, ...props }) => {
   const navigate = useNavigate();
   const { reset } = useCity();
 
-  const onClick = () => { 
+  const goBackOnClick = () => { 
     if (route) {
       navigate(route);
     } else {
-      navigate(-1)
-    }
-
-    // reset();
+      navigate('/')
+      reset()
+    };
   };
 
   return (
-    <Stack alignItems='center' bgcolor='rgb(70, 75, 178)' padding='20px' width={ fullWidth ? '100%' : 'initial'}>
-      <Button onClick={onClick} fullWidth={!!fullWidth}>
-        <Typography>
-          { label || 'Go Back'}
-        </Typography>
-      </Button>
-    </Stack>
+    <Button {...props} label={label || 'Go Back'} onClick={onClick || goBackOnClick}  />
   );
 };

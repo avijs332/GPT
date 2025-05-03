@@ -27,17 +27,23 @@ max_steps_per_episode = 100
 num_episodes = 50
 video_filename = "osm_env_training.mp4"
 
-def get_closest_node(G, points):
+def get_closest_node(G, points, should_grade=False):
     result = {}
 
     for point in points:
         if point.osm_id in G.nodes:
             # Node exists, keep it
-            result[point.osm_id] = { 'type': 'shit', 'grade': 10 }
+            if (should_grade):
+                result[point.osm_id] = { 'type': 'node', 'grade': point.grade }
+            else:
+                result[point.osm_id] = { 'type': 'node'}
         else:
             # Node not in graph, but we have coordinates
             nearest = ox.distance.nearest_nodes(G, X=point.lon, Y=point.lat)
-            result[nearest] = { 'type': 'shit', 'grade': 10 }  # replace with nearest
+            if (should_grade):
+                result[nearest] = { 'type': 'node', 'grade': point.grade }
+            else:
+                result[nearest] = { 'type': 'node'}
     
     return result
 class OSMEnv(ParallelEnv):
@@ -56,7 +62,8 @@ class OSMEnv(ParallelEnv):
         self.frames = []  # Store frames for video
         self.edge_times = {}
         self.total_edge_length = sum(self.edge_lengths.values())
-        self.central_stations=keys = list(get_closest_node(self.G, central_stations).keys())
+        self.central_stations=list(get_closest_node(self.G, central_stations).keys())
+        print(central_stations)
         if run_type == "train":
             self.initial_central_station=initial_central_station
         else:
@@ -69,7 +76,7 @@ class OSMEnv(ParallelEnv):
             length = data.get('length', 100)  # Default length
             speed = data.get('maxspeed', 30)  # Default speed (km/h)
             if isinstance(speed, list): # if the speed is a string, then split the string and take the first number.
-                speed = int(speed[0])
+                speed = speed[0]
             if isinstance(speed, str): # if the speed is a string, then split the string and take the first number.
                 speed = int(speed.split(' ')[0])
 
@@ -78,7 +85,7 @@ class OSMEnv(ParallelEnv):
             self.edge_times[tuple(sorted([u, v]))] = length / (speed / 3.6) # calculate the time in seconds.
             
                 
-        self.interest_points = get_closest_node(self.G, interest_points)
+        self.interest_points = get_closest_node(self.G, interest_points, True)
         self.visited_interest_points = {agent: set() for agent in self.agents}  # Track visited interest points
         
     def reset(self, seed=None, options=None):
