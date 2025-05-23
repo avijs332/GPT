@@ -1,0 +1,9 @@
+tensorflow
+osmnx
+matplotlib
+pettingzoo
+numpy
+fastapi 
+uvicorn 
+pydantic
+scikit-learn
