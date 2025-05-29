@@ -18,8 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/api/predict", response_model=Response)
+@app.post("/predict", response_model=Response)
 async def get_city_coordinates(request: RouteRequest):
+    print('predicting')
     routes = get_routes(request.city_name, request.bus_count, request.interest_points, request.central_points)
  
     return {"success": True, "data": routes}
@@ -29,8 +30,6 @@ app.mount("/static", StaticFiles(directory="./dist"), name="static")
 @app.get("/{full_path:path}")
 async def serve_react_app(full_path: str):
     path = "./dist/"
-
-    print(full_path)
 
     if (full_path == ''):
         path += 'index.html'
