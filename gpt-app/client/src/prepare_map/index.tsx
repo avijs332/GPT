@@ -10,7 +10,6 @@ import { OsmLocation, useOsmSearch } from '../hooks';
 import { useCity } from '../providers/city-provider';
 import { PointsList } from './PointsList';
 import { Button } from '../common/Button';
-import { useEffect } from 'react';
 
 export const PreparePage = () => {
   const { city, interestPoints, setInterestPoints, centralPoints, setCentralPoints } = useCity();
@@ -63,6 +62,7 @@ export const PreparePage = () => {
                   <Box display='flex' key={x.osm_id}>
                     <Checkbox 
                       defaultChecked={!!interestPoints.find(point => x.osm_id === point.osm_id)} 
+                      // @ts-ignore TODO: fix later
                       onChange={(event) => markLocationOnChange(event, x, setInterestPoints, point => point.grade = 1) } />
                     <Checkbox 
                       defaultChecked={!!centralPoints.find(point => x.osm_id === point.osm_id)} 
