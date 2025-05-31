@@ -20,6 +20,9 @@ After activating the vpn
 
 use `ssh` in the powershell to connect to the remote server, `ssh <inner ip>`. Now you are connected to the server!
 
+## Upload files
+So to upload files to the remote, you must use the sftp protocol. I found the vscode sftp extension to be the easiest option, you are welcome to use whatever you want. But remember that ssh and sftp are the only supported protocols!
+
 ## useful stuff
 ### screen
 cool software to have 'multiple screens' in the terminal
@@ -30,5 +33,5 @@ cool software to have 'multiple screens' in the terminal
 #### watch an existing screen
 - `screen -r <tag>`
 #### existing screens
-- myapp: python server
+- app: python server
 - accessLog: nginx access log
