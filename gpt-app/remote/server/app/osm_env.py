@@ -78,10 +78,11 @@ class OSMEnv(ParallelEnv):
             if isinstance(speed, list): # if the speed is a string, then split the string and take the first number.
                 speed = speed[0]
             if isinstance(speed, str): # if the speed is a string, then split the string and take the first number.
-                speed = int(speed.split(' ')[0])
+                if speed == 'IL:urban':
+                    speed = 50
+                else:
+                    speed = int(speed.split(' ')[0])
 
-            # print('=====')
-            # print(speed)
             self.edge_times[tuple(sorted([u, v]))] = length / (speed / 3.6) # calculate the time in seconds.
             
                 

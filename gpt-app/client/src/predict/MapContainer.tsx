@@ -6,10 +6,25 @@ import { LatLngExpression } from 'leaflet';
 import { Route } from './Route';
 import { Box, Checkbox, List, ListItem, Typography } from '@mui/material';
 
+const getRandomColor = () => {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  
+  return color;
+}
+
 export const MapContainer: FC<{ data: RouteHookReturnType }> = ({ data }) => {
   const center: LatLngExpression = data.city;
-
   const [shouldShowRoutes, setShouldShowRoutes] = useState(Object.keys(data).filter(x => x !== 'city').map(() => true));
+
+  const [colors] = useState(Object.keys(data)
+    .filter(x => x !== 'city').filter(((_,index) => shouldShowRoutes[index]))
+    .map(getRandomColor))
+
 
   return (
     <div style={{ height: '500px', width: '100%' }}>
@@ -26,17 +41,21 @@ export const MapContainer: FC<{ data: RouteHookReturnType }> = ({ data }) => {
         {
           Object.keys(data)
             .filter(x => x !== 'city').filter(((_,index) => shouldShowRoutes[index]))
-            // .forEach(x => )
-            .map((x) => <Route key={x} route={data[x].route} stops={data[x].stops} />)
+            .map((x, index) => <Route color={colors[index]} key={x} route={data[x].route} stops={data[x].stops} />)
         }
       </LeafletMapContainer>
       <Box height='200px'>
         <List>
           {
-            Object.keys(data).filter(x => x !== 'city').map((routeName, index) =>
+            Object.keys(data).filter(x => x !== 'city').map((_, index) =>
               <ListItem>
-                <Checkbox checked={shouldShowRoutes[index]} onClick={() => setShouldShowRoutes(prev => prev.map((shouldShow, prevIndex) => index === prevIndex ? !shouldShow : shouldShow))} />
-                <Typography>{routeName}</Typography>
+                <Checkbox sx={{
+                    color: colors[index],
+                    '&.Mui-checked': {
+                      color: colors[index],
+                    },
+                  }} checked={shouldShowRoutes[index]} onClick={() => setShouldShowRoutes(prev => prev.map((shouldShow, prevIndex) => index === prevIndex ? !shouldShow : shouldShow))} />
+                <Typography>Bus Lane {index + 1}</Typography>
               </ListItem>
             )
           }

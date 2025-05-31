@@ -40,8 +40,9 @@ export const useRoutes = (cityName: string, busCount: number, interestPoints: Ar
     queryKey: [cityName, busCount, interestPoints, centralPoints],
     refetchInterval: Infinity,
     queryFn: () => axios.post(
-      'https://gpt-app.cs.colman.ac.il/predict', 
-      // 'http://localhost:8000/mock/predict_route', 
+      // 'https://gpt-app.cs.colman.ac.il/predict', 
+      // 'https://gpt-app.cs.colman.ac.il/predict', 
+      'http://localhost:8000/predict', 
       JSON.stringify({ city_name: cityName, bus_count: busCount, interest_points: interestPoints, central_points: centralPoints }),
       {
         headers:

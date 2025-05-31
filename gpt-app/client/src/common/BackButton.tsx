@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Button, ButtonProps } from "./Button";
 import { useCity } from "../providers/city-provider";
+import { useLayout } from "./LayoutWrapper";
 
 interface BackButtonProps extends Omit<ButtonProps, 'label'> {
   route?: string;
@@ -12,6 +13,7 @@ interface BackButtonProps extends Omit<ButtonProps, 'label'> {
 export const BackButton: FC<BackButtonProps> = ({ onClick, route, label, ...props }) => {
   const navigate = useNavigate();
   const { reset } = useCity();
+  const { unSpread } = useLayout();
 
   const goBackOnClick = () => { 
     if (route) {
@@ -20,6 +22,8 @@ export const BackButton: FC<BackButtonProps> = ({ onClick, route, label, ...prop
       navigate('/')
       reset()
     };
+    
+    unSpread();
   };
 
   return (
