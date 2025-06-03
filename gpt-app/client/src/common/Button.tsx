@@ -8,8 +8,8 @@ export interface ButtonProps {
 };
 
 export const Button: FC<ButtonProps> = ({ fullWidth, label, onClick }) => (
-  <Stack alignItems='center' bgcolor='rgb(70, 75, 178)' padding='20px' width={ fullWidth ? '100%' : 'initial'}>
-    <MuiButton onClick={onClick} fullWidth={!!fullWidth}>
+  <Stack alignItems='center' padding='20px' width={ fullWidth ? '100%' : 'initial'}>
+    <MuiButton variant="contained" onClick={onClick} fullWidth={!!fullWidth}>
       <Typography>
         { label }
       </Typography>

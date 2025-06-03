@@ -1,23 +1,37 @@
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import { OsmLocation } from '../hooks';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { LatLngTuple } from "leaflet";
-import { FC } from "react";
+import { FC, useEffect } from "react";
+
+import { OsmLocation } from '../hooks';
 
 interface PrepareMapProps {
   city: OsmLocation;
   markers: Array<LatLngTuple>
 };
 
+const MapRefresh = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 1000);
+  }, []);
+
+  return null;
+}
+
 export const PrepareMap: FC<PrepareMapProps> = ({ city, markers }) => {
   const center = [city.lat, city.lon] as LatLngTuple;
   
   return (
-    <div style={{ height: '500px', width: '100%' }}>
+    <div style={{ height: '500px', width: '100%', overflow: 'visible' }}>
       <MapContainer
         center={center} 
         zoom={15} 
         style={{ height: '100%', width: '100%' }}
       >
+        <MapRefresh />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
