@@ -58,9 +58,7 @@ const createBusStopIcon = (color: string) => {
 };
 
 // @ts-ignore TODO: fix later
-export const Route: FC<{route: BusRoute, stops: BusRoute}> = ({ route, stops }) => {
-  const [color] = useState(getRandomColor());
-  console.log(route[5])
+export const Route: FC<{route: BusRoute, stops: BusRoute, color: string}> = ({ route, stops, color }) => {
   return (
     <>
       {route.length > 0 && (
