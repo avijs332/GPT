@@ -23,14 +23,14 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker-compose
 
-    - name: Log in to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    # - name: Log in to DockerHub
+    #   uses: docker/login-action@v3
+    #   with:
+    #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and push Docker images with Compose
       working-directory: ./gpt-app
       run: |
         docker-compose build
-        docker-compose push
+        # docker-compose push
