@@ -23,6 +23,7 @@ jobs:
     # Install and build the React app
     - name: Install dependencies and build React app
       run: |
+        ls
         cd /gpt-app/client
         npm ci
         npm run build
