@@ -1,8 +1,7 @@
 import json
 import random
 
-from osm_env import OSMEnv
-from agent import MAPPOAgent
+from agent import OSMEnv, MAPPOAgent
 
 state_size = 2
 max_action_size = 8

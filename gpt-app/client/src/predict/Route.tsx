@@ -1,20 +1,9 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import { Polyline, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import { BusRoute } from './route.hook'
-
-const getRandomColor = () => {
-  const letters = '0123456789ABCDEF';
-  let color = '#';
-  
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  
-  return color;
-}
 
 const createSvgIcon = (color: string) => {
   const svg = `
@@ -69,9 +58,7 @@ const createBusStopIcon = (color: string) => {
 };
 
 // @ts-ignore TODO: fix later
-export const Route: FC<{route: BusRoute, stops: BusRoute}> = ({ route, stops }) => {
-  const [color] = useState(getRandomColor());
-  console.log(route[5])
+export const Route: FC<{route: BusRoute, stops: BusRoute, color: string}> = ({ route, stops, color }) => {
   return (
     <>
       {route.length > 0 && (
