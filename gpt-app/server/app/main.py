@@ -42,20 +42,20 @@ app.add_middleware(AuthMiddleware)
 app.include_router(auth_router, tags=["auth"], prefix="/auth")
 app.include_router(api_router, tags=["api"], prefix="/api")
 
-app.mount("/static", StaticFiles(directory="./dist"), name="static")
+# app.mount("/static", StaticFiles(directory="./dist"), name="static")
 
-@app.get("/{full_path:path}")
-async def serve_react_app(full_path: str):
-    path = "./dist/"
+# @app.get("/{full_path:path}")
+# async def serve_react_app(full_path: str):
+#     path = "./dist/"
 
-    if (full_path == ''):
-        path += 'index.html'
-    else:
-        path += full_path
+#     if (full_path == ''):
+#         path += 'index.html'
+#     else:
+#         path += full_path
 
-    if os.path.exists(path):
-        return FileResponse(path)
-    return {"error": f"{path} not found"}
+#     if os.path.exists(path):
+#         return FileResponse(path)
+#     return {"error": f"{path} not found"}
 
 if __name__ == "__main__":
     uvicorn.run(
