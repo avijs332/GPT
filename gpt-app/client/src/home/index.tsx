@@ -1,11 +1,17 @@
 import { Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-import { Button, MotionWrapper } from '../common';
+import { Button, MotionWrapper, useLayout } from '../common';
+import { useEffect } from 'react';
 
 export const Home = () => {
   const navigate = useNavigate();
-  console.log(import.meta.env.VITE_SERVER_ADDRESS)
+
+  const { spread } = useLayout();
+
+  useEffect(() => {
+    spread();
+  }, []);
 
   return (
     <MotionWrapper>
