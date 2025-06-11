@@ -1,6 +1,8 @@
 # GPT
 Generative Public Transportation Model with reinforcement learning
 
+https://colab.research.google.com/drive/1dAGuNsDcdKDioNRJkhlzei4wo8TmLUzn?usp=sharing#scrollTo=a8SVzHai5cOD
+
 # Prerequisits
 
 <ol>
