@@ -7,6 +7,10 @@ import { PlanningPage } from "../first-details"
 import { PreparePage } from "../prepare-map"
 import { Home } from "../home"
 import { Login, Register, Welcome } from "../exterior"
+import { PlanPage } from "../plan"
+import { Profile } from '../profile';
+import { ResultPage } from '../results';
+import { ThankYouPage } from '../thank-you';
 
 export const Router = () => {
   const { isAuthenticated, isMeLoading } = useAuth();
@@ -15,16 +19,21 @@ export const Router = () => {
   return (
     <>
       {
-        getToken() && (isMeLoading || !isAuthenticated()) ?
+        getToken() && (isMeLoading || !isAuthenticated) ?
             <div>Loading</div> :
             <Routes>
               {
-                isAuthenticated() ? (
+                isAuthenticated ? (
                   <>
                     <Route path="/" element={<Home />} />
+                    <Route path="/plan2" element={<PlanPage />} />
                     <Route path="/plan" element={<PlanningPage />} />
+                    {/* <Route path="/results" element={<ResultsPage />} /> */}
                     <Route path="/prepare" element={<PreparePage />} />
                     <Route path="/map" element={<BusRouteMap />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/result/:id" element={<ResultPage />} />
+                    <Route path="/thank-you" element={<ThankYouPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </>
                 ) : (

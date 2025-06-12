@@ -1,14 +1,15 @@
-import axios from "axios";
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { UseQueryResult } from "@tanstack/react-query";
+import { UseMutationResult } from "@tanstack/react-query";
 
 import { useToken } from "./token-provider";
-import { useAuthQuery, useGet, useServerGet } from "../hooks";
+import { useAuthMutation, useServerGet } from "../hooks";
 
 interface User {
   id: string;
   name: string;
+  username: string;
   email: string;
+  joinedAt: Date;
 };
 
 interface LoginBody {
@@ -16,12 +17,13 @@ interface LoginBody {
   password: string;
 };
 
+
 interface AuthResponse {
   user: User;
   token: string;
-}
+};
 
-interface RegisterBody extends User {
+interface RegisterBody extends Omit<User, 'id' | 'joinedAt'> {
   password: string;
 };
 
@@ -31,11 +33,13 @@ interface AuthReturn {
 };
 
 interface IAuthContext {
-  user: User | null;
-  login: (username: string, password: string) => Promise<AuthReturn>;
-  register: (body: RegisterBody) => Promise<AuthReturn>;
+  user: User;
+  login: (username: string, password: string) => AuthReturn;
+  loginState: UseMutationResult<AuthResponse, Error, LoginBody, unknown>;
+  register: (body: RegisterBody) => AuthReturn;
+  registerState: UseMutationResult<AuthResponse, Error, RegisterBody, unknown>;
   logout: () => void;
-  isAuthenticated: () => boolean;
+  isAuthenticated: boolean;
   isMeLoading: boolean;
   isErrorOnAuth?: boolean;
 };
@@ -47,29 +51,33 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const { getToken, setToken, removeToken } = useToken();
 
   const meResponse = useServerGet<User>('auth/me', { enabled: getToken() !== null && user === null });
+  const loginState = useAuthMutation<AuthResponse, LoginBody>('login', ({ user, token }) => {
+    setUser(user);
+    setToken(token);
+  });
 
-  const handleAuth = (response: UseQueryResult<AuthResponse, Error>) => {
-    if (response.isSuccess && response.data) {
-      setUser(response.data.user);
-      setToken(response.data.token);
-    };
+  const registerState = useAuthMutation<AuthResponse, RegisterBody>('register', ({ user, token }) => {
+    setUser(user);
+    setToken(token);
+  });
 
+  const handleAuth = (response: UseMutationResult<AuthResponse, Error, any, unknown>) => {
     return {
       user: response.data?.user || null,
-      isLoading: response.isLoading,
+      isLoading: response.isPending,
     };
   };
 
-  const login = async (username: string, password: string) => {
-    const response = useAuthQuery<AuthResponse, LoginBody>('login', { username, password });
+  const login = (username: string, password: string) => {
+    loginState.mutate({ username, password });
 
-    return handleAuth(response);
+    return handleAuth(loginState);
   }
 
-  const register = async (body: RegisterBody) => {
-    const response = useAuthQuery<AuthResponse, RegisterBody>('login', body);
+  const register = (body: RegisterBody) => {
+    registerState.mutate(body);
 
-    return handleAuth(response);
+    return handleAuth(registerState);
   };
 
   const logout = () => {
@@ -77,25 +85,29 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     removeToken();
   };
 
-  const isAuthenticated = () => {
-    return user !== null;
-  };
+  const isAuthenticated = user !== null;
 
   useEffect(() => {
     if (meResponse.isSuccess && meResponse.data) {
       setUser(meResponse.data);
-    }
+    } else if (meResponse.isError) {
+      setUser(null);
+      removeToken();
+    };
   }, [meResponse.isLoading]);
 
   return (
     <AuthContext.Provider value={{ 
+      //@ts-ignore
       user, 
-      login, 
+      login,
+      loginState,
       register, 
+      registerState,
       logout, 
       isAuthenticated, 
-      isMeLoading: meResponse.isLoading, 
-      isErrorOnAuth: meResponse.isError }}>
+      isMeLoading: meResponse.isLoading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

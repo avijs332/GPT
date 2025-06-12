@@ -17,6 +17,7 @@ def user_helper(user) -> dict:
         "id": str(user["_id"]),
         "name": user["name"],
         "email": user["email"],
+        "joinedAt": user.get("joinedAt"),
         # Do not expose password
     }
 

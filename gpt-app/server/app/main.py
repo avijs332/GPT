@@ -25,14 +25,19 @@ app.add_middleware(
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return await call_next(request)
         if request.url.path.startswith("/api"):
             auth_header = request.headers.get("authorization")
             if not auth_header or not auth_header.startswith("Bearer "):
+                print("Missing or invalid Authorization header")
                 return JSONResponse(status_code=401, content={"detail": "Missing or invalid Authorization header"})
             token = auth_header.split(" ", 1)[1]
+            print(f"Received token: {token}")
             try:
                 decode_token(token)
             except Exception as e:
+                print(e)
                 return JSONResponse(status_code=401, content={"detail": str(e)})
         response = await call_next(request)
         return response

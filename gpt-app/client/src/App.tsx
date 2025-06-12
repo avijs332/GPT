@@ -1,5 +1,5 @@
 import { AppProviders } from "./providers"
-import { LayoutWrapper } from "./common/LayoutWrapper"
+import { LayoutWrapper } from "./layout/LayoutWrapper"
 import { Router } from "./routes";
 
 const App = () => {

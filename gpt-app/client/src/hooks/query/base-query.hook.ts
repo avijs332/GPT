@@ -6,13 +6,14 @@ import { useToken } from "../../providers/token-provider";
 export interface FetchOptions {
   refetchInterval?: number;
   enabled?: boolean;
+  extraKeys?: any[];
 };
 
 export const useGet = <TResponse>(url: string, options: FetchOptions = {}) => {
   const { getToken } = useToken();
 
   const response = useQuery({
-    queryKey: [url],
+    queryKey: [url, ...options.extraKeys ?? []],
     refetchInterval: options.refetchInterval ?? Infinity,
     enabled: options.enabled ?? true,
     queryFn: async () =>

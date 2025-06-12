@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { LatLngExpression } from "leaflet";
 import axios from 'axios';
 import { OsmLocation } from "../hooks";
+import { useToken } from "../providers/token-provider";
 
 export type BusRoute = Array<LatLngExpression>;
 
@@ -23,7 +24,7 @@ export type BusRoute = Array<LatLngExpression>;
 //   return response;
 // };
 type ApiResponse = { 
-  city: {lat: number, lng: number}, 
+  city: {lat: number, lng: number, name: string}, 
   lanes: Record<string, {
     stops: Array<{lat: number, lng: number}>;
     route: Array<{lat: number, lng: number}>
@@ -36,16 +37,20 @@ export type RouteHookReturnType = { city: LatLngExpression } & Record<string, {
 }>;
 
 export const useRoutes = (cityName: string, busCount: number, interestPoints: Array<OsmLocation>, centralPoints: Array<OsmLocation>) => {
+  const { getToken } = useToken();
   const response = useQuery<RouteHookReturnType>({
     queryKey: [cityName, busCount, interestPoints, centralPoints],
     refetchInterval: Infinity,
     queryFn: () => axios.post(
-      'https://gpt-app.cs.colman.ac.il/predict', 
+      `${import.meta.env.VITE_SERVER_ADDRESS}/api/maps/predict`, 
       // 'http://localhost:8000/mock/predict_route', 
       JSON.stringify({ city_name: cityName, bus_count: busCount, interest_points: interestPoints, central_points: centralPoints }),
       {
         headers:
-          {'Content-Type': 'application/json',}
+          {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`,
+          }
       },
     )
     .then(x => x.data.data as ApiResponse)

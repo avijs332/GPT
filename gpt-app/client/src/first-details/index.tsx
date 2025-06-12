@@ -19,7 +19,7 @@ export const PlanningPage = () => {
   };
 
   return (
-    <MotionWrapper>
+    <MotionWrapper shouldPad={true} shouldSpread={false}>
       <form>
         <Stack spacing={2}>
         <Typography alignSelf='center' fontSize='30px'>GPT - Generative Public Transport</Typography>
