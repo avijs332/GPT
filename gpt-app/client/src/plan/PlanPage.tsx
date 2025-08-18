@@ -42,7 +42,7 @@ export const PlanPage = () => {
             multiple
             options={poiOptions}
             value={selectedPOIs}
-            onChange={(event, newValue) => setSelectedPOIs(newValue)}
+            onChange={(_event, newValue) => setSelectedPOIs(newValue)}
             renderInput={(params) => <TextField {...params} label="Select Interest Points" />}
           />
 
