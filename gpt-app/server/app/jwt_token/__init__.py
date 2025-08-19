@@ -9,6 +9,7 @@ def create_token(user_id: str) -> str:
         "user_id": user_id,
         "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
     }
+
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
 def decode_token(token: str):

@@ -1,23 +1,17 @@
-import { Route, Routes } from "react-router"
-
-import BusRouteMap from "./predict"
 import { AppProviders } from "./providers"
-import { PlanningPage } from "./first-details"
-import { PreparePage } from "./prepare-map"
-import { Home } from "./home"
-import { LayoutWrapper } from "./common/LayoutWrapper"
+import { LayoutWrapper } from "./layout/LayoutWrapper"
+import { Router } from "./routes";
 
-const App = () => (
-  <AppProviders>
-    <LayoutWrapper>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/plan" element={<PlanningPage />} />
-        <Route path="/prepare" element={<PreparePage />} />
-        <Route path="/map" element={<BusRouteMap />} />
-      </Routes>
-    </LayoutWrapper>
-  </AppProviders>
-)
+const App = () => {
+  return (
+    (
+      <AppProviders>
+        <LayoutWrapper>
+            <Router />
+        </LayoutWrapper>
+      </AppProviders>
+    )
+  );
+};
 
 export default App

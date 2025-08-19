@@ -1,12 +1,14 @@
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { LatLngTuple } from "leaflet";
 import { FC, useEffect } from "react";
+import L from 'leaflet';
 
 import { OsmLocation } from '../hooks';
 
 interface PrepareMapProps {
   city: OsmLocation;
-  markers: Array<LatLngTuple>
+  interestPoints: Array<LatLngTuple>;
+  centralPoints: Array<LatLngTuple>;
 };
 
 const MapRefresh = () => {
@@ -21,7 +23,7 @@ const MapRefresh = () => {
   return null;
 }
 
-export const PrepareMap: FC<PrepareMapProps> = ({ city, markers }) => {
+export const PrepareMap: FC<PrepareMapProps> = ({ city, interestPoints, centralPoints }) => {
   const center = [city.lat, city.lon] as LatLngTuple;
   
   return (
@@ -36,12 +38,26 @@ export const PrepareMap: FC<PrepareMapProps> = ({ city, markers }) => {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {markers.map(position => (
-            <Marker key={`${position[0]}, ${position[1]}`} position={position}>
-                <Popup>Marker at {position[0]}, {position[1]}</Popup>
-            </Marker>
+        {interestPoints.map(position => (
+          <Marker key={`interest-${position[0]},${position[1]}`} position={position}
+            icon={L.divIcon({
+              className: '',
+              html: `<div style="background:#e3f2fd;border:2px solid #1976d2;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;"><span style='font-size:13px;font-weight:bold;color:#1976d2;'>I</span></div>`
+            })}
+          >
+            <Popup>Interest Point at {position[0]}, {position[1]}</Popup>
+          </Marker>
         ))}
-
+        {centralPoints.map(position => (
+          <Marker key={`central-${position[0]},${position[1]}`} position={position}
+            icon={L.divIcon({
+              className: '',
+              html: `<div style="background:#fce4ec;border:2px solid #d81b60;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;"><span style='font-size:13px;font-weight:bold;color:#d81b60;'>C</span></div>`
+            })}
+          >
+            <Popup>Central Point at {position[0]}, {position[1]}</Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </div>
   )

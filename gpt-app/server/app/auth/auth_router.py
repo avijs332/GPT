@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from bson import ObjectId
 import hashlib
+from datetime import datetime
 
 from jwt_token import create_token, decode_token
 from config import settings
@@ -25,6 +26,7 @@ def user_helper(user) -> dict:
         "name": user.get("name"),
         "username": user.get("username"),
         "email": user.get("email"),
+        "joinedAt": user.get("joinedAt"),
         # Do not expose password
     }
 
@@ -46,7 +48,8 @@ def register(data: RegisterRequest, users_collection=Depends(get_users_collectio
         "name": data.name,
         "username": data.username,
         "email": data.email,
-        "password": hash_password(data.password)
+        "password": hash_password(data.password),
+        "joinedAt": datetime.now()
     }
     result = users.insert_one(user_data)
     user_data["_id"] = result.inserted_id

@@ -5,17 +5,23 @@ import { QueryProvider } from './query-provider';
 import { ThemeProvider } from './theme-provider';
 import { CityProvider } from './city-provider';
 import { ErrorBoundaryProvider } from './error-boundary';
+import { AuthProvider } from './auth-provider';
+import { TokenProvider } from './token-provider';
 
 export const AppProviders = ({ children }: PropsWithChildren) => (
   <BrowserRouter>
     <QueryProvider>
-      <CityProvider>
         <ThemeProvider>
           <ErrorBoundaryProvider>
-            {children}
+            <TokenProvider>
+              <AuthProvider>
+                <CityProvider> {/* TODO-city: move this to a more specific place */}
+                  {children}
+                </CityProvider>
+              </AuthProvider>
+            </TokenProvider>
           </ErrorBoundaryProvider>
         </ThemeProvider>
-      </CityProvider>
     </QueryProvider>
   </BrowserRouter>
 );
