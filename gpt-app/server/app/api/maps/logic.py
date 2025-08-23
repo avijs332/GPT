@@ -22,11 +22,11 @@ def get_routes(city_name, bus_count, interest_points, central_points):
     final_lanes = transform_trails_to_lanes(final_trail)
     final_lanes['city'] = final_lanes['lanes']['lane_1']['route'][0]
     
-    with open("final_trail.json", "w") as f:
-        json.dump(final_trail, f, indent=4)
+    # with open("final_trail.json", "w") as f:
+    #     json.dump(final_trail, f, indent=4)
         
-    with open("final_lanes.json", "w") as f:
-        json.dump(final_lanes, f, indent=4)
+    # with open("final_lanes.json", "w") as f:
+    #     json.dump(final_lanes, f, indent=4)
 
     return final_lanes
 

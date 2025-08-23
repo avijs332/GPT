@@ -37,6 +37,14 @@ async def get_requests_by_profile(profile_id: str, request: Request):
     
     return {"success": True, "data": requests}
 
+@router.get("/open")
+async def get_requests_by_profile(request: Request):
+    requests_collection = get_requests_collection(request)
+    requests_cursor = requests_collection.find({"status": RequestStatus.pending.value})
+    requests = [request_helper(req) for req in requests_cursor]
+    
+    return {"success": True, "data": requests}
+
 @router.post("/")
 async def create_request(request: Request):
     requests_collection = get_requests_collection(request)

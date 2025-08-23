@@ -40,6 +40,7 @@ interface IAuthContext {
   registerState: UseMutationResult<AuthResponse, Error, RegisterBody, unknown>;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   isMeLoading: boolean;
   isErrorOnAuth?: boolean;
 };
@@ -86,6 +87,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   const isAuthenticated = user !== null;
+  const isAdmin = user?.username === 'admin';
 
   useEffect(() => {
     if (meResponse.isSuccess && meResponse.data) {
@@ -105,7 +107,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       register, 
       registerState,
       logout, 
-      isAuthenticated, 
+      isAuthenticated,
+      isAdmin, 
       isMeLoading: meResponse.isLoading 
     }}>
       {children}

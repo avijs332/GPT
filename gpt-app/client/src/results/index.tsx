@@ -10,12 +10,14 @@ import L from 'leaflet';
 // Helper to convert API points to Leaflet LatLng
 const toLatLng = (arr: {lat: number, lng: number}[]) => arr.map(({ lat, lng }) => [lat, lng] as [number, number]);
 
-type ApiResponse = { 
+export type ResultApiResponse = {
+  id: string,
   city: {lat: number, lng: number}, 
   lanes: Record<string, {
     stops: Array<{lat: number, lng: number}>;
     route: Array<{lat: number, lng: number}>
-  }> 
+  }>,
+  createdAt: Date,
 };
 
 export const ResultPage = () => {
@@ -25,8 +27,8 @@ export const ResultPage = () => {
 
   const { data: dataFull, isLoading, error } = useApiGet<{
     Sucess: boolean;
-    data: ApiResponse
-    }>(`results/requests/${id}`, { extraKeys: [id] });
+    data: ResultApiResponse
+    }>(`results/${id}`, { extraKeys: [id] });
 
   useEffect(() => {
     spread();
@@ -47,7 +49,7 @@ export const ResultPage = () => {
   if (error) return <MotionWrapper shouldPad={true} shouldSpread={false}><Typography color="error">Error loading result.</Typography></MotionWrapper>;
   if (!dataFull) return <MotionWrapper shouldPad={true} shouldSpread={false}><Typography>No data found.</Typography></MotionWrapper>;
 
-  const data: ApiResponse = dataFull.data;
+  const data: ResultApiResponse = dataFull.data;
 
   const { city, lanes } = data;
   const cityLatLng = [city.lat, city.lng] as [number, number];

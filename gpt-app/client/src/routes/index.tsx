@@ -11,9 +11,13 @@ import { PlanPage } from "../plan"
 import { Profile } from '../profile';
 import { ResultPage } from '../results';
 import { ThankYouPage } from '../thank-you';
+import { AdminPage } from "../admin"
+import { AdminUploadPage } from "../admin/AdminUploadPage"
+import { RequestView } from "../profile/RequestView"
+import { RequestCreateView } from "../profile/RequestCreateView"
 
 export const Router = () => {
-  const { isAuthenticated, isMeLoading } = useAuth();
+  const { isAuthenticated, isMeLoading, isAdmin } = useAuth();
   const { getToken } = useToken();
   
   return (
@@ -23,7 +27,7 @@ export const Router = () => {
             <div>Loading</div> :
             <Routes>
               {
-                isAuthenticated ? (
+                isAuthenticated ? !isAdmin ? (
                   <>
                     <Route path="/" element={<Home />} />
                     <Route path="/plan2" element={<PlanPage />} />
@@ -32,9 +36,17 @@ export const Router = () => {
                     <Route path="/prepare" element={<PreparePage />} />
                     <Route path="/map" element={<BusRouteMap />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/request/:requestId" element={<RequestView />} />
+                    <Route path="/request/:requestId/create" element={<RequestCreateView />} />
                     <Route path="/result/:id" element={<ResultPage />} />
                     <Route path="/thank-you" element={<ThankYouPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
+                  </>
+                ) : (
+                  <>
+                    <Route path='/admin' element={<AdminPage />} />
+                    <Route path='/admin/requests/:requestId' element={<AdminUploadPage />} />
+                    <Route path="*" element={<Navigate to="/admin" replace />} />
                   </>
                 ) : (
                   <>

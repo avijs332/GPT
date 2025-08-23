@@ -1,4 +1,4 @@
-import { OsmLocation } from "../hooks";
+import { OsmLocation } from "../../hooks";
 
 export enum RequestStatus {
   pending = 'pending',
