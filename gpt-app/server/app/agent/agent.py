@@ -471,6 +471,7 @@ class MAPPOAgent:
         state = np.expand_dims(state, axis=0)
         mask = np.expand_dims(mask, axis=0)
 
+        print(agent_idx, state, mask)
         probs = self.actor[agent_idx].predict([state, mask], verbose=0)[0]
         valid_probs = probs[:num_valid_actions]
         valid_probs /= np.sum(valid_probs)

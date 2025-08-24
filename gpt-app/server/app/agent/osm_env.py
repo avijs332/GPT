@@ -49,7 +49,20 @@ class OSMEnv(ParallelEnv):
         self.total_edge_length = sum(self.edge_lengths.values())
         self.episode_count = 0
         self.agent_start_points = {}
-        self.central_stations=central_stations
+        self.central_stations=None
+        if central_stations:
+            self.central_stations = []
+
+            for osmid, data in central_stations.items():
+              if osmid in self.G.nodes:
+                  # Node exists, keep it
+                  self.central_stations.append(osmid)
+              else:
+                  # Node not in graph, but we have coordinates
+                  print(osmid)
+                  nearest_to_central = ox.distance.nearest_nodes(self.G, X=data['lon'], Y=data['lat'])
+                  self.central_stations.append(nearest_to_central)            
+
         if self.central_stations is None:
             self.central_stations = random.sample(self.nodes, 4)  # Select 4 random nodes
         self.central_stations_set = set(self.central_stations)
@@ -58,7 +71,9 @@ class OSMEnv(ParallelEnv):
             length = data.get('length', 100)  # Default length
             speed = data.get('maxspeed', 30)  # Default speed (km/h)
             if isinstance(speed, str): # if the speed is a string, then split the string and take the first number.
-                speed = int(speed.split(' ')[0])
+                speed = int(speed.split(' ')[0].split(';')[0])
+            elif isinstance(speed, list):
+                speed = int(speed[0])
             self.edge_times[tuple(sorted([u, v]))] = length / (speed / 3.6) # calculate the time in seconds.
         self.interest_points = {}
         if interest_points:

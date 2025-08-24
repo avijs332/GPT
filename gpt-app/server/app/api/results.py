@@ -61,7 +61,7 @@ async def create_result(request: Request):
     for model_id in request.get("model_ids"):
         fetch_model(model_id)
 
-    model_paths = [f"./loaded_models/actor_{i}.h5" for i in request.get("model_ids")]
+    model_paths = [f"./loaded_models/actor_{i}.keras" for i in request.get("model_ids")]
 
     # Convert interestPoints to the required dict format
     interest_points_dict = {
@@ -74,22 +74,78 @@ async def create_result(request: Request):
         for point in request["interestPoints"]
     }
 
-    prediction = test(
+    central_stations_dict = {
+        int(point["osm_id"]): {
+            "lat": float(point["lat"]),
+            "lon": float(point["lon"])
+        }
+        for point in request["centralPoints"]
+    }
+
+    env = test(
         MAPPOAgent, 
         request["busCount"], 
         request["city"]["display_name"], 
-        [int(point["osm_id"]) for point in request["centralPoints"]], 
+        central_stations_dict, 
         interest_points_dict,
-        2, 8, 
+        6, 8, 
         model_paths
     )
 
-    with open("trail.json", "w") as f:
-        json.dump(prediction, f, indent=4)
+    # with open("trail.json", "w") as f:
+    #     json.dump(env, f, indent=4)
 
-    # result = results_collection.insert_one(data)
+    lanes = {}
+
+    for i, agent_name in enumerate(env.agents):
+        lane_name = f"lane_{i+1}"
+        lanes[lane_name] = {
+            # "stops": [
+            #     {"lat": env.G.nodes[pos]['lat'], "lng": env.G.nodes[pos]['lon']} 
+            #     for pos in env.trails[agent_name] if pos in env.stops
+            # ],
+            "route": [
+                {"lat": env.G.nodes[pos]['y'], "lng": env.G.nodes[pos]['x']} 
+                for pos in env.trails[agent_name]
+            ]
+        }
+    stops = [
+        {"lat": env.G.nodes[station]['y'], "lng": env.G.nodes[station]['x']}
+        for station in env.placed_stations
+    ]
+
+    # Transform prediction to desired format
+    # for lane_name, lane_data in env["trails"].items():
+    #     lanes[lane_name] = {
+    #         "stops": [
+    #             {"lat": stop["lat"], "lng": stop["lon"]} for stop in lane_data.get("stops", [])
+    #         ],
+    #         "route": [
+    #             {"lat": point["lat"], "lng": point["lon"]} for point in lane_data.get("route", [])
+    #         ]
+    #     }
+    # print(env.placed_stations)
+    # print(stops)
+    # print(lanes)
+    result = {
+        "stops": stops,
+        "lanes": lanes,
+        "city": {
+            "name": request["city"]["display_name"],
+            "lat": request["city"]["lat"],
+            "lng": request["city"]["lon"],
+        },
+        "createdAt": str(datetime.datetime.now()),
+        # "userId": str(request.get("userId")),
+        "userId": request.get("userId"),
+        # "requestId": data["requestId"]
+        "requestId": ObjectId(data["requestId"])
+    }
+
+    # with open("result.json", "w") as f:
+    #     json.dump(result, f, indent=4)
+    result_inserted = results_collection.insert_one(result)
     # data["_id"] = str(result.inserted_id)
     # data = result_helper(data)
     
-    # return {"success": True, "data": data}
-    return {"success": True}
+    return {"success": True }

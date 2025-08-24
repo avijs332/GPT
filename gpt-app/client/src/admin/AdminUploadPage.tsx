@@ -77,7 +77,7 @@ export const AdminUploadPage = () => {
             sx={{ width: '100%', mb: 2 }}
           >
             Select Model File
-            <input type="file" accept=".h5" hidden onChange={handleFileChange} />
+            <input type="file" accept=".keras" hidden onChange={handleFileChange} />
           </Button>
           <Typography variant="body2" sx={{ mb: 2 }}>
             {file ? `Selected file: ${file.name}` : 'No file selected'}

@@ -7,8 +7,23 @@ def test(agent_class, num_agents, location ,central_stations, interest_points, s
     env = OSMEnv(location=location, central_stations=central_stations, interest_points=interest_points, num_agents=num_agents)
     agent = agent_class(state_size, max_action_size, num_agents, env.node_to_index)
 
+    # Check if model file is empty or unreadable
+    for path in model_paths:
+        try:
+            if not os.path.exists(path):
+                print(f"File does not exist: {path}")
+            elif os.path.getsize(path) == 0:
+                print(f"File is empty: {path}")
+            else:
+                with open(path, 'rb') as fileObject:
+                    first_bytes = fileObject.read(128)
+                    print(f"Successfully read file: {path}, first 128 bytes: {first_bytes[:32]} ...")
+        except Exception as e:
+            print(f"Error reading file {path}: {e}")
+
     # Load trained models
     for i in range(num_agents):
+        print(f"about to load model for agent {i} from {model_paths[i]}")
         agent.actor[i].load_weights(model_paths[i])
         print(f"Loaded model for agent {i} from {model_paths[i]}")
 
@@ -49,7 +64,7 @@ def test(agent_class, num_agents, location ,central_stations, interest_points, s
         # Plot the trails
         # plot_episode(env, episode, save_path)
 
-        return env.trails
+        return env
 
 
 # def load_models(location, num_agents, state_size, action_size, node_to_index):

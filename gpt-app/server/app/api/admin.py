@@ -23,7 +23,7 @@ async def upload_model(request_id: str = Form(...), file: UploadFile = File(...)
 def complete_request(request_id: str):
     result = db.requests.update_one(
         {"_id": ObjectId(request_id)},
-        {"$set": {"status": "complete"}}
+        {"$set": {"status": "finished"}}
     )
     if result.modified_count:
         return {"success": True, "message": "Request marked as complete."}

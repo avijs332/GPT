@@ -10,7 +10,7 @@ db = client[settings.db_name]
 fs = gridfs.GridFS(db)
 
 def fetch_model(doc_id):
-    with open(f'./loaded_models/actor_{doc_id}.h5', 'wb') as fileObject:
+    with open(f'./loaded_models/actor_{doc_id}.keras', 'wb') as fileObject:
         fileObject.write(fs.get(ObjectId(doc_id)).read())
 
 def save_model_to_db(file_obj: BinaryIO, filename: str):
