@@ -117,7 +117,7 @@ export const ResultPage = () => {
           </Box>
           <Typography variant="h6" gutterBottom>Bus Lanes</Typography>
           <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
-            {Object.entries(lanes).map(([laneId, lane]) => {
+            {Object.entries(lanes).map(([laneId]) => {
               return (
                 <Paper key={laneId} variant="outlined" sx={{
                   p: 1.5,
