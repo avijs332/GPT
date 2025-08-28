@@ -11,7 +11,6 @@ from auth import auth_router
 from api import api_router
 from config import lifespan, settings
 from jwt_token import decode_token
-from files import save_model_to_db
 
 app = FastAPI(lifespan=lifespan) # uvicorn main:app --reload
 

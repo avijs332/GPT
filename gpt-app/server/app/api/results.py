@@ -23,6 +23,7 @@ def result_helper(result) -> dict:
         "requestId": str(result.get("requestId")) if result.get("requestId") else None,
         "city": result.get("city"),
         "lanes": result.get("lanes"),
+        "stops": result.get("stops", []),
         "createdAt": result.get("createdAt") or str(datetime.datetime.now()),
     }
 
@@ -61,7 +62,7 @@ async def create_result(request: Request):
     for model_id in request.get("model_ids"):
         fetch_model(model_id)
 
-    model_paths = [f"./loaded_models/actor_{i}.keras" for i in request.get("model_ids")]
+    model_paths = [f"{settings.models_route}/actor_{i}.keras" for i in request.get("model_ids")]
 
     # Convert interestPoints to the required dict format
     interest_points_dict = {
@@ -92,41 +93,22 @@ async def create_result(request: Request):
         model_paths
     )
 
-    # with open("trail.json", "w") as f:
-    #     json.dump(env, f, indent=4)
-
     lanes = {}
 
     for i, agent_name in enumerate(env.agents):
         lane_name = f"lane_{i+1}"
         lanes[lane_name] = {
-            # "stops": [
-            #     {"lat": env.G.nodes[pos]['lat'], "lng": env.G.nodes[pos]['lon']} 
-            #     for pos in env.trails[agent_name] if pos in env.stops
-            # ],
             "route": [
                 {"lat": env.G.nodes[pos]['y'], "lng": env.G.nodes[pos]['x']} 
                 for pos in env.trails[agent_name]
             ]
         }
+
     stops = [
         {"lat": env.G.nodes[station]['y'], "lng": env.G.nodes[station]['x']}
         for station in env.placed_stations
     ]
 
-    # Transform prediction to desired format
-    # for lane_name, lane_data in env["trails"].items():
-    #     lanes[lane_name] = {
-    #         "stops": [
-    #             {"lat": stop["lat"], "lng": stop["lon"]} for stop in lane_data.get("stops", [])
-    #         ],
-    #         "route": [
-    #             {"lat": point["lat"], "lng": point["lon"]} for point in lane_data.get("route", [])
-    #         ]
-    #     }
-    # print(env.placed_stations)
-    # print(stops)
-    # print(lanes)
     result = {
         "stops": stops,
         "lanes": lanes,
@@ -142,10 +124,6 @@ async def create_result(request: Request):
         "requestId": ObjectId(data["requestId"])
     }
 
-    # with open("result.json", "w") as f:
-    #     json.dump(result, f, indent=4)
     result_inserted = results_collection.insert_one(result)
-    # data["_id"] = str(result.inserted_id)
-    # data = result_helper(data)
     
-    return {"success": True }
+    return {"success": True, "data": result_helper(result)}

@@ -17,6 +17,13 @@ def get_requests_collection(request: Request):
     db = client[settings.db_name]
     return db["requests"]
 
+def get_feedback_collection(request: Request):
+    client = request.app.state.mongo_client
+    if client is None:
+        raise RuntimeError("mongo_client is not initialized. Check your database configuration.")
+    db = client[settings.db_name]
+    return db["feedback"]
+
 def request_helper(req) -> dict:
     return {
         "id": str(req["_id"]),
@@ -27,6 +34,8 @@ def request_helper(req) -> dict:
         "status": req.get("status"),
         "userId": str(req.get("userId")) if req.get("userId") else None,
         "createdAt": req.get("createdAt"),
+        "hasRejectionFeedback": req.get("hasRejectionFeedback", False),
+        "lastFeedbackAt": req.get("lastFeedbackAt"),
     }
 
 @router.get("/profile/{profile_id}")
@@ -59,3 +68,72 @@ async def create_request(request: Request):
     data = request_helper(data)
 
     return {"success": True, "data": data}
+
+@router.post("/{request_id}/reject")
+async def reject_request(request_id: str, request: Request):
+    """
+    Handle request rejection with feedback from user
+    """
+    requests_collection = get_requests_collection(request)
+    feedback_collection = get_feedback_collection(request)
+    
+    try:
+        data = await request.json()
+        feedback_text = data.get("feedback", "")
+        
+        # Validate request exists
+        existing_request = requests_collection.find_one({"_id": ObjectId(request_id)})
+        if not existing_request:
+            return {"success": False, "error": "Request not found"}
+        
+        # Store feedback
+        feedback_data = {
+            "requestId": ObjectId(request_id),
+            "feedback": feedback_text,
+            "createdAt": datetime.now(),
+            "userId": existing_request.get("userId")
+        }
+        feedback_result = feedback_collection.insert_one(feedback_data)
+        
+        # Optionally update request status to indicate rejection/feedback provided
+        requests_collection.update_one(
+            {"_id": ObjectId(request_id)},
+            {"$set": {
+                "hasRejectionFeedback": True, 
+                "lastFeedbackAt": datetime.now(), 
+                "status": RequestStatus.pending.value}}
+        )
+        
+        return {
+            "success": True, 
+            "message": "Feedback received successfully",
+            "feedbackId": str(feedback_result.inserted_id)
+        }
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.get("/{request_id}/feedback")
+async def get_request_feedback(request_id: str, request: Request):
+    """
+    Get all feedback for a specific request
+    """
+    feedback_collection = get_feedback_collection(request)
+    
+    try:
+        feedback_cursor = feedback_collection.find({"requestId": ObjectId(request_id)})
+        feedback_list = []
+        
+        for feedback in feedback_cursor:
+            feedback_list.append({
+                "id": str(feedback["_id"]),
+                "requestId": str(feedback["requestId"]),
+                "feedback": feedback.get("feedback", ""),
+                "createdAt": feedback.get("createdAt"),
+                "userId": str(feedback.get("userId")) if feedback.get("userId") else None
+            })
+        
+        return {"success": True, "data": feedback_list}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}

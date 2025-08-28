@@ -15,6 +15,7 @@ import { AdminPage } from "../admin"
 import { AdminUploadPage } from "../admin/AdminUploadPage"
 import { RequestView } from "../profile/RequestView"
 import { RequestCreateView } from "../profile/RequestCreateView"
+import { RequestRejectedView } from "../profile/RequestRejectedView"
 
 export const Router = () => {
   const { isAuthenticated, isMeLoading, isAdmin } = useAuth();
@@ -35,9 +36,10 @@ export const Router = () => {
                     {/* <Route path="/results" element={<ResultsPage />} /> */}
                     <Route path="/prepare" element={<PreparePage />} />
                     <Route path="/map" element={<BusRouteMap />} />
-                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile" element={<Profile />} />                    
                     <Route path="/request/:requestId" element={<RequestView />} />
                     <Route path="/request/:requestId/create" element={<RequestCreateView />} />
+                    <Route path="/request/:requestId/retry" element={<RequestRejectedView />} />
                     <Route path="/result/:id" element={<ResultPage />} />
                     <Route path="/thank-you" element={<ThankYouPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
