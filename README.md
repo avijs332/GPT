@@ -1,9 +1,24 @@
 # GPT
 Generative Public Transportation Model with reinforcement learning
 
-https://colab.research.google.com/drive/1dAGuNsDcdKDioNRJkhlzei4wo8TmLUzn?usp=sharing#scrollTo=a8SVzHai5cOD
+GPT focuses on developing a city-specific planning model for optimizing public transportation routes using Multi-Agent Proximal Policy Optimization (MAPPO). The primary objective is to provide city planners and mayors with data-driven tools to design efficient public transport lane layouts that maximize coverage, reduce travel times, and ensure accessibility to key points of interest across the city.
+
+
+![519c5cb4-98da-42d0-b569-19421c208168 (1)](https://github.com/user-attachments/assets/dd66c524-c95b-4be0-84ea-ec35aa92763a)
+
+<img width="1590" height="590" alt="image" src="https://github.com/user-attachments/assets/2044745b-cf91-40cc-befe-bb8d9af9125f" />
+
 
 # Prerequisits
+
+pettingzoo
+osmnx
+networkx
+imageio
+matplotlib
+numpy
+tensorflow
+keras
 
 <ol>
 pip install osmnx networkx pettingzoo gymnasium numpy matplotlib
