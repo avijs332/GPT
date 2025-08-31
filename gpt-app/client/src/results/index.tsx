@@ -10,12 +10,14 @@ import L from 'leaflet';
 // Helper to convert API points to Leaflet LatLng
 const toLatLng = (arr: {lat: number, lng: number}[]) => arr.map(({ lat, lng }) => [lat, lng] as [number, number]);
 
-type ApiResponse = { 
-  city: {lat: number, lng: number}, 
+export type ResultApiResponse = {
+  id: string;
+  city: {lat: number, lng: number};
+  stops: Array<{lat: number, lng: number}>;
   lanes: Record<string, {
-    stops: Array<{lat: number, lng: number}>;
     route: Array<{lat: number, lng: number}>
-  }> 
+  }>,
+  createdAt: Date,
 };
 
 export const ResultPage = () => {
@@ -25,8 +27,8 @@ export const ResultPage = () => {
 
   const { data: dataFull, isLoading, error } = useApiGet<{
     Sucess: boolean;
-    data: ApiResponse
-    }>(`results/requests/${id}`, { extraKeys: [id] });
+    data: ResultApiResponse
+    }>(`results/${id}`, { extraKeys: [id] });
 
   useEffect(() => {
     spread();
@@ -47,9 +49,9 @@ export const ResultPage = () => {
   if (error) return <MotionWrapper shouldPad={true} shouldSpread={false}><Typography color="error">Error loading result.</Typography></MotionWrapper>;
   if (!dataFull) return <MotionWrapper shouldPad={true} shouldSpread={false}><Typography>No data found.</Typography></MotionWrapper>;
 
-  const data: ApiResponse = dataFull.data;
+  const data: ResultApiResponse = dataFull.data;
 
-  const { city, lanes } = data;
+  const { city, lanes, stops } = data;
   const cityLatLng = [city.lat, city.lng] as [number, number];
 
   return (
@@ -96,26 +98,26 @@ export const ResultPage = () => {
                       </Marker>
                     )}
                     {/* Stops */}
-                    {lane.stops.map((stop, i) => (
-                      <Marker 
-                        key={laneId + '-stop-' + i} 
-                        position={[stop.lat, stop.lng]}
-                        icon={L.divIcon({
-                          className: '',
-                          html: `<div style="background:#fff;border:2px solid ${['#3182ce', '#38a169', '#805ad5', '#e53e3e'][idx % 4]};border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;"><span style='display:block;width:8px;height:8px;background:${['#3182ce', '#38a169', '#805ad5', '#e53e3e'][idx % 4]};border-radius:50%'></span></div>`
-                        })}
-                      >
-                        <Popup>Stop {i + 1} (Lane {laneId})</Popup>
-                      </Marker>
-                    ))}
                   </>
                 )
+              ))}
+              {stops?.map((stop, i) => (
+                <Marker 
+                  key={stop + '-stop-' + i} 
+                  position={[stop.lat, stop.lng]}
+                  icon={L.divIcon({
+                    className: '',
+                    html: `<div style="background:#fff;border:2px solid ${['#3182ce', '#38a169', '#805ad5', '#e53e3e'][i % 4]};border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;"><span style='display:block;width:8px;height:8px;background:${['#3182ce', '#38a169', '#805ad5', '#e53e3e'][i % 4]};border-radius:50%'></span></div>`
+                  })}
+                >
+                  <Popup>Stop {i + 1}</Popup>
+                </Marker>
               ))}
             </MapContainer>
           </Box>
           <Typography variant="h6" gutterBottom>Bus Lanes</Typography>
           <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
-            {Object.entries(lanes).map(([laneId, lane]) => {
+            {Object.entries(lanes).map(([laneId]) => {
               return (
                 <Paper key={laneId} variant="outlined" sx={{
                   p: 1.5,
@@ -152,7 +154,7 @@ export const ResultPage = () => {
                       {visibleLanes[laneId] ? 'Hide' : 'Show'}
                     </Box>
                   </Box>
-                  <Typography color="text.secondary" fontSize={13}>Stops: {lane.stops.length}</Typography>
+                  {/* <Typography color="text.secondary" fontSize={13}>Stops: {lane.stops.length}</Typography> */}
                 </Paper>
               );
             })}

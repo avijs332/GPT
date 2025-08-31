@@ -11,5 +11,6 @@ class Settings:
     PORT: int = int(os.getenv("PORT", 8000))
     environment: str = os.getenv("ENVIRONMENT", "development")
     secret_key: str = os.getenv("SECRET_KEY", "your_secret_key")
+    models_route: str = os.getenv("MODELS_ROUTE", "./loaded_models")
 
 settings = Settings()

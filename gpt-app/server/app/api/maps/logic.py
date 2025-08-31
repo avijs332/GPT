@@ -7,7 +7,7 @@ state_size = 2
 max_action_size = 8
 
 def get_routes(city_name, bus_count, interest_points, central_points):
-    model_paths = [f"./models/actor_{i}.h5" for i in range(3)]
+    model_paths = [f"./models/actor_{i}.keras" for i in range(3)]
     env = OSMEnv(location=city_name, central_stations=central_points, interest_points=interest_points, num_agents=bus_count, run_type='test')
     agent = MAPPOAgent(state_size, max_action_size, bus_count, env.node_to_index)
 
@@ -22,11 +22,11 @@ def get_routes(city_name, bus_count, interest_points, central_points):
     final_lanes = transform_trails_to_lanes(final_trail)
     final_lanes['city'] = final_lanes['lanes']['lane_1']['route'][0]
     
-    with open("final_trail.json", "w") as f:
-        json.dump(final_trail, f, indent=4)
+    # with open("final_trail.json", "w") as f:
+    #     json.dump(final_trail, f, indent=4)
         
-    with open("final_lanes.json", "w") as f:
-        json.dump(final_lanes, f, indent=4)
+    # with open("final_lanes.json", "w") as f:
+    #     json.dump(final_lanes, f, indent=4)
 
     return final_lanes
 

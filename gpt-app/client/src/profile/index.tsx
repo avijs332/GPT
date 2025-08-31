@@ -3,7 +3,7 @@ import { MotionWrapper } from '../common';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/auth-provider';
 import { useApiGet } from '../hooks';
-import { Request } from './request.entity';
+import { Request } from '../common/types';
 
 interface RequestsApiResult {
   success: boolean;
@@ -72,7 +72,7 @@ export const Profile = () => {
                   key={request.id}
                   variant="outlined"
                   sx={{ p: 2, borderRadius: 2, background: '#232946', cursor: 'pointer' }}
-                  onClick={() => navigate(`/result/${request.id}`)}
+                  onClick={() => navigate(`/request/${request.id}`)}
                   elevation={3}
                 >
                   <Typography fontWeight={600}>City: {request.city.name} • Lanes: {request.busCount}</Typography>
