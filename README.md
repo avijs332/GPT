@@ -8,23 +8,30 @@ GPT focuses on developing a city-specific planning model for optimizing public t
 
 <img width="1590" height="590" alt="image" src="https://github.com/user-attachments/assets/2044745b-cf91-40cc-befe-bb8d9af9125f" />
 
+<img width="1312" height="990" alt="image" src="https://github.com/user-attachments/assets/2bd59f8e-2324-47e1-b64a-b48f7cb5c92c" />
+
 
 # Prerequisits
 
 pettingzoo
+
 osmnx
+
 networkx
+
 imageio
+
 matplotlib
+
 numpy
+
 tensorflow
+
 keras
 
 <ol>
 pip install osmnx networkx pettingzoo gymnasium numpy matplotlib
 </ol>
-
-![f63cfe4c-5b2f-4386-ae3f-1b3bf95754bf](https://github.com/user-attachments/assets/30d9f155-2fda-4e05-9661-b8863701a675)
 
 # Working with Remote server
 ## step 1
