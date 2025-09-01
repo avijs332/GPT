@@ -1,0 +1,8 @@
+pettingzoo
+osmnx
+networkx
+imageio
+matplotlib
+numpy
+tensorflow
+keras
