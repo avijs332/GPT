@@ -8,10 +8,10 @@ from keras.saving import register_keras_serializable
 import numpy as np
 
 lr_schedule = ExponentialDecay(
-    initial_learning_rate=0.0001,  # Initial LR
-    decay_steps=1000,  # How often to decay
-    decay_rate=0.96,  # Decay factor
-    staircase=True  # Decay at discrete steps
+    initial_learning_rate=0.0004,  # Initial LR
+    decay_steps=2000,  # How often to decay
+    decay_rate=0.965,  # Decay factor
+    staircase=False  # Decay at discrete steps
 )
 
 @register_keras_serializable()
@@ -471,7 +471,6 @@ class MAPPOAgent:
         state = np.expand_dims(state, axis=0)
         mask = np.expand_dims(mask, axis=0)
 
-        print(agent_idx, state, mask)
         probs = self.actor[agent_idx].predict([state, mask], verbose=0)[0]
         valid_probs = probs[:num_valid_actions]
         valid_probs /= np.sum(valid_probs)

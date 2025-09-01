@@ -1,5 +1,6 @@
 import os
 import tensorflow as tf
+from keras.models import load_model
 from .agent import MAPPOAgent
 from .osm_env import OSMEnv, max_steps_per_episode
 
@@ -21,6 +22,7 @@ def test(agent_class, num_agents, location ,central_stations, interest_points, s
         except Exception as e:
             print(f"Error reading file {path}: {e}")
 
+    print(model_paths)
     # Load trained models
     for i in range(num_agents):
         print(f"about to load model for agent {i} from {model_paths[i]}")
@@ -65,29 +67,3 @@ def test(agent_class, num_agents, location ,central_stations, interest_points, s
         # plot_episode(env, episode, save_path)
 
         return env
-
-
-# def load_models(location, num_agents, state_size, action_size, node_to_index):
-#     """Loads the actor and critic models."""
-#     models_dir = f"trained_models/{location.replace(' ', '_')}_{num_agents}_agents"
-#     agent = MAPPOAgent(state_size, action_size, num_agents, node_to_index)
-#     for i in range(num_agents):
-#         agent.actor[i] = tf.keras.models.load_model(os.path.join(models_dir, f"actor_{i}.h5"))
-#     agent.critic = tf.keras.models.load_model(os.path.join(models_dir, "critic.h5"), custom_objects={'mse': tf.keras.losses.MeanSquaredError()}) #add custom objects
-#     print(f"Models loaded from {models_dir}")
-#     return agent
-# model_paths = [f"/content/trained_models/Old_City,_Beersheba,_Israel_6_agents/actor_{i}.keras" for i in range(num_agents)]
-
-# trails = test(
-#     agent_class=MAPPOAgent,
-#     num_agents=num_agents,
-#     location=location,
-#     central_stations=central_stations,
-#     interest_points=interest_points,
-#     state_size=6,
-#     max_action_size=8,
-#     model_paths=model_paths,
-#     episodes=1,
-#     show_plot=True,
-#     save_path="test_route"  # will save as test_route_ep1.png
-# )

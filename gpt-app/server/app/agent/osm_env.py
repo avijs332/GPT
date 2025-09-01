@@ -1,25 +1,27 @@
 from pettingzoo import ParallelEnv
 import osmnx as ox
 import random
-import numpy as np
-import matplotlib.pyplot as plt
+import copy
 from collections import deque
+import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
 import imageio.v2 as imageio
 
-max_steps_per_episode = 25
-agent_start_refresh_rate = 10
-max_number_stations=14
+max_steps_per_episode = 100
+agent_start_refresh_rate = 100
+max_number_stations=25
 
 Weights = {
     "Success": 1.0,
     "Fail": -1.0,
-    "DistanceTimeAvg": 0.3,
+    "DistanceTimeAvg": 0.6,
     "TravelTime": 0.6,
-    "TravelLength": 0.7,
+    "TravelLength": 0.8,
     "Cycle": -1.0,
     "DeadEnd": -0.8,
     "Coverage": 0.9,
+    "Exploration": 0.6,
     "Overlap": -0.1,
     "POI": 0.6,
     "Crossing": 0.9,
@@ -28,6 +30,8 @@ Weights = {
     "StationDensityPenalty": -0.3,
     "StationCost": -0.4
 }
+
+EXPLORATION_DECAY_RATE = 0.001
 
 class OSMEnv(ParallelEnv):
 
@@ -41,6 +45,7 @@ class OSMEnv(ParallelEnv):
         self.visited_edges = {agent: set() for agent in self.agents}
         self.edge_visit_counts = {}
         self.node_visit_counts = {agent: {} for agent in self.agents}
+        self.agent_step_counts = {agent: 0 for agent in self.agents}
         self.edge_lengths = {tuple(sorted([u, v])): self.G[u][v][0]['length'] for u, v in self.G.edges()}
         self.total_rewards = []
         self.episode_lengths = []
@@ -84,7 +89,6 @@ class OSMEnv(ParallelEnv):
               else:
                   # Node not in graph, but we have coordinates
                   print(osmid)
-                  print(data)
                   nearest = ox.distance.nearest_nodes(self.G, X=data['lon'], Y=data['lat'])
                   self.interest_points[nearest] = data  # replace with nearest
         self.visited_interest_points = {poi_node: 0 for poi_node in self.interest_points} # Track visited interest points
@@ -106,6 +110,7 @@ class OSMEnv(ParallelEnv):
                 'cycle': {'values': deque(maxlen=self.buffer_size), 'mean': 0.0, 'std': 1.0},
                 'dead_end': {'values': deque(maxlen=self.buffer_size), 'mean': 0.0, 'std': 1.0},
                 'overlap': {'values': deque(maxlen=self.buffer_size), 'mean': 0.0, 'std': 1.0},
+                'exploration': {'values': deque(maxlen=self.buffer_size), 'mean': 0.0, 'std': 1.0},
                 'interest_point': {'values': deque(maxlen=self.buffer_size), 'mean': 0.0, 'std': 1.0},
                 'crossing': {'values': deque(maxlen=self.buffer_size), 'mean': 0.0, 'std': 1.0},
                 'proximity': {'values': deque(maxlen=self.buffer_size), 'mean': 0.0, 'std': 1.0},
@@ -145,6 +150,7 @@ class OSMEnv(ParallelEnv):
       self.visited_edges = {agent: set() for agent in self.agents}
       self.edge_visit_counts = {}
       self.node_visit_counts = {agent: {} for agent in self.agents}
+      self.agent_step_counts = {agent: 0 for agent in self.agents}
       self.visited_interest_points = {poi_node: 0 for poi_node in self.interest_points} # Track visited interest points
 
       self.total_rewards.append(0)
@@ -154,10 +160,11 @@ class OSMEnv(ParallelEnv):
       observations = self._get_observations()
       return observations, {}
 
-    def get_valid_actions(self, agent_name):
-      current_node = self.pos[self.agents[agent_name]]  # Get current node of agent
+    def get_valid_actions(self, agent_index):
+      current_node = self.pos[self.agents[agent_index]]  # Get current node of agent
+      agent_name = f"agent_{agent_index}"
       neighbors = list(self.G.neighbors(current_node))  # Get valid next nodes
-      valid_actions = [self.node_to_index[n] for n in neighbors]  # Convert to indices
+      valid_actions = [self.node_to_index[n] for n in neighbors if n not in self.trails[agent_name]]  # Convert to indices
 
       # Allow placing a station if not too many placed and current node is not already a station
       if (self.station_placement_count < max_number_stations and
@@ -426,6 +433,15 @@ class OSMEnv(ParallelEnv):
 
         return reward
 
+    def exploration_reward(self, agent, next_node):
+      reward_value = 0.0
+
+      if next_node not in self.node_visit_counts[agent]:
+          reward_value = 1.0 / (1.0 + EXPLORATION_DECAY_RATE * self.agent_step_counts[agent])
+
+      return self.normalize_component(agent, 'exploration', reward_value)
+
+
 
     def reward_fn(self, current_node, next_node, agent, rewards, terminated=False, station_placed=False):
         if terminated:
@@ -440,20 +456,22 @@ class OSMEnv(ParallelEnv):
             'distance': self.distance_reward(agent, current_node, next_node),
             'cycle': self.cycle_panelty(agent, next_node),
             'dead_end': self.dead_end_panelty(agent, next_node),
-            'overlap': self.overlap_penalty(agent, next_node),
+            # 'overlap': self.overlap_penalty(agent, next_node),
             'interest_point': self.interest_point_reward(agent),
             'crossing': self.path_crossing_reward(agent, next_node),
-            'coverage': self.coverage_reward(agent, current_node, next_node)
+            # 'coverage': self.coverage_reward(agent, current_node, next_node),
+            'exploration': self.exploration_reward(agent, next_node)
         }
 
         weighted_rewards = [
             reward_components['cycle'] * Weights["Cycle"],
             reward_components['dead_end'] * Weights["DeadEnd"],
-            reward_components['overlap'] * Weights["Overlap"],
+            # reward_components['overlap'] * Weights["Overlap"],
             reward_components['distance'] * Weights["DistanceTimeAvg"],
             reward_components['interest_point'] * Weights["POI"],
             reward_components['crossing'] * Weights["Crossing"],
-            reward_components['coverage'] * Weights["Coverage"],
+            # reward_components['coverage'] * Weights["Coverage"],
+            reward_components['exploration'] * Weights["Exploration"],
         ]
 
         # Sum all weighted rewards
@@ -562,6 +580,7 @@ class OSMEnv(ParallelEnv):
           self.total_rewards[-1] += rewards[agent]
           self.episode_lengths[-1] += 1
           self.global_step_count += 1
+          self.agent_step_counts[agent] += 1
 
           # Update visited interest points set if this node is a POI
           if next_node in self.interest_points:
@@ -620,7 +639,7 @@ class OSMEnv(ParallelEnv):
             # Plot interest points
             interest_pt_x = [self.G.nodes[station]['x'] for station in self.interest_points]
             interest_pt_y = [self.G.nodes[station]['y'] for station in self.interest_points]
-            ax.scatter(central_station_x, central_station_y, c='green', edgecolors='black', s=120, marker='*', label='Interest Points', zorder=5)
+            ax.scatter(interest_pt_x, interest_pt_y, c='green', edgecolors='black', s=120, marker='*', label='Interest Points', zorder=5)
 
             ax.set_title(f"Episode {episode + 1}")
             ax.legend()
@@ -633,8 +652,9 @@ class OSMEnv(ParallelEnv):
             fig.canvas.draw()
             w, h = fig.canvas.get_width_height()
             buf = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
-            frame = buf.reshape(h, w, 4)[..., :3]
+            frame = buf.reshape(h, w, 4)[..., :3].copy()
             self.frames.append(frame)
+            plt.close(fig)
             #plt.close(fig)
 
     def save_video(self, filename):
@@ -644,22 +664,3 @@ class OSMEnv(ParallelEnv):
 
         imageio.mimsave(filename, self.frames, fps=6)
         print(f"Video saved as {filename} ({len(self.frames)} frames)")
-
-        # print(self.frames)
-        # if not self.frames:
-        #     print("No frames to save!")
-        #     return
-        # fig, ax = plt.subplots()
-        # def update(frame):
-        #     ax.clear()
-        #     ox.plot_graph(self.G, ax=ax, node_color="gray", edge_color="lightblue", show=False, close=False)
-        #     colors = ['red', 'blue', 'green', 'purple', 'orange']
-        #     for i, agent in enumerate(self.agents):
-        #         trail_x, trail_y = zip(*[(self.G.nodes[pos]['x'], self.G.nodes[pos]['y']) for pos in self.trails[agent][:frame+1]])
-        #         ax.plot(trail_x, trail_y, color=colors[i % len(colors)], linewidth=2, marker='o', markersize=5)
-        #     ax.legend()
-        #     return ax,
-        # ani = FuncAnimation(fig, update, frames=len(self.frames), interval=100, blit=False)
-        # ani.save(filename, writer='ffmpeg', fps=10)
-        # plt.close(fig)
-        # print(f"Video saved as {filename}")
