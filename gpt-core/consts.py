@@ -38,25 +38,6 @@ EXPLORATION_DECAY_RATE = 0.01
 # Experiments
 
 experiments = {
-    "neve_tzedek": {
-       "num_agents": 5,
-       "location": "Neve Tzedek, Tel Aviv, Israel",
-       "central_stations": [33617427,366651303,4013462837,1208799499,384668147],
-       "interest_points": {
-                   440062859: {'type': 'mall', 'grade': 1},
-                   3593580050: {'type': 'school', 'grade': 0.6},
-                   3985298579: {'type': 'park', 'grade': 0.8},
-                   2268450648: {'type': 'restaurant', 'grade': 0.7},
-                   366649858: {'type': 'hospital', 'grade': 0.9},
-                   1208799525: {'type': 'cafe', 'grade': 0.5},
-                   357556865: {'type': 'mall', 'grade': 1},
-                   1319999663: {'type': 'school', 'grade': 0.6},
-                   440062857: {'type': 'park', 'grade': 0.8},
-                   5958477391: {'type': 'restaurant', 'grade': 0.7},
-                   579603495: {'type': 'hospital', 'grade': 0.9},
-                   6427502028: {'type': 'cafe', 'grade': 0.5}
-      }
-    },
     "ramat_aviv": {
         "num_agents": 3,
         "location": "Ramat Aviv, Tel Aviv, Israel",
